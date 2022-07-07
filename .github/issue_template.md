@@ -1,0 +1,27 @@
+> Please provide us with the following information:
+> ---------------------------------------------------------------
+
+### This issue is for a: (mark with an `x`)
+```
+- [ ] bug report -> please search issues before submitting
+- [ ] feature request
+- [ ] documentation issue or request
+- [ ] regression (a behavior that used to work and stopped in a new release)
+```
+
+### Minimal steps to reproduce
+>
+
+### Any log messages given by the failure
+>
+
+### Expected/desired behavior
+>
+
+### OS and Version?
+> Windows 8, 10 or 11. Linux (which distribution). macOS (Yosemite? El Capitan? Sierra?). Raspberry PI(32bit? 64bit?)
+
+### Mention any other details that might be useful
+
+> ---------------------------------------------------------------
+> Thanks! We'll be in touch soon.

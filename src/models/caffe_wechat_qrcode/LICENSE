@@ -1,0 +1,9 @@
+# [WeChat QRCode](https://github.com/opencv/opencv_contrib/tree/4.x/modules/wechat_qrcode)
+
+📌 [Apache-2.0 license](https://github.com/opencv/opencv_contrib/blob/4.x/modules/wechat_qrcode/LICENSE)
+
+- [Model files](https://github.com/WeChatCV/opencv_3rdparty/tree/wechat_qrcode)
+    - detect.caffemodel
+    - detect.prototxt
+    - sr.caffemodel
+    - sr.prototxt
