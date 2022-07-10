@@ -37,6 +37,6 @@
 
 ### [Google Fonts](https://fonts.google.com/)
 
-- [NotoSansCJKjp-Regular.otf](https://github.com/googlefonts/noto-cjk)
-
 📌 [License](https://fonts.google.com/knowledge/glossary/licensing)
+
+- [NotoSansCJKjp-Regular.otf](https://github.com/googlefonts/noto-cjk)
