@@ -71,11 +71,35 @@ class EdgeAINode(BaseNode):
             # Add a file dialog
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
                 dpg.add_spacer(height=5)
-                dpg.add_button(
-                    label="Select Image File",
-                    width=self.settings["node_width"],
-                    callback=lambda: dpg.show_item("file_dialog_image:" + str(node_id)),
-                )
+                with dpg.group(horizontal=True):
+                    dpg.add_button(
+                        label="1",
+                        tag=dag_node_tag + ":image_file:0",
+                        width=self.settings["node_width"] * 0.075,
+                        user_data=dag_node_tag + ":image_file:0",
+                        callback=self.callback_show_image,
+                    )
+                    dpg.add_button(
+                        label="2",
+                        tag=dag_node_tag + ":image_file:1",
+                        width=self.settings["node_width"] * 0.075,
+                        user_data=dag_node_tag + ":image_file:1",
+                        callback=self.callback_show_image,
+                    )
+                    dpg.add_button(
+                        label="3",
+                        tag=dag_node_tag + ":image_file:2",
+                        width=self.settings["node_width"] * 0.075,
+                        user_data=dag_node_tag + ":image_file:2",
+                        callback=self.callback_show_image,
+                    )
+                    dpg.add_button(
+                        label="Select Image File",
+                        width=self.settings["node_width"] * 0.65,
+                        callback=lambda: dpg.show_item(
+                            "file_dialog_image:" + str(node_id)
+                        ),
+                    )
 
             # Add an image from a specified texture
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
@@ -147,3 +171,19 @@ class EdgeAINode(BaseNode):
         if app_data["file_name"] != ".":
             node_id = sender.split(":")[1]
             self.configs["image_paths"][node_id] = app_data["file_path_name"]
+
+    def callback_show_image(self, sender, app_data, user_data):
+        node_id = user_data.split(":")[0]
+        fileList = [
+            "computer-g09cdd0896_1920.jpg",
+            "people-g18920d86d_1920.jpg",
+            "students-gf264b6953_1920.jpg",
+        ]
+        filePath = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "../../../assets/images/",
+                fileList[int(user_data.split(":")[3])],
+            )
+        )
+        self.configs["image_paths"][node_id] = filePath
