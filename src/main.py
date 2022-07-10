@@ -55,6 +55,19 @@ def main():
     # Create Dear PyGui Context
     dpg.create_context()
 
+    # Set default font
+    with dpg.font_registry():
+        font_file = os.path.abspath(
+            os.path.join(current_path, "assets/fonts/NotoSansCJKjp-Regular.otf")
+        )
+        with dpg.font(font_file, 16) as regular_font:
+            dpg.add_font_range_hint(dpg.mvFontRangeHint_Default)
+            dpg.add_font_range_hint(dpg.mvFontRangeHint_Japanese)
+            dpg.add_font_range_hint(dpg.mvFontRangeHint_Korean)
+            dpg.add_font_range_hint(dpg.mvFontRangeHint_Chinese_Full)
+            dpg.add_font_range_hint(dpg.mvFontRangeHint_Chinese_Simplified_Common)
+        dpg.bind_font(regular_font)
+
     # Create Dear PyGui Viewport
     dpg.create_viewport(
         title="WeDX",
@@ -177,7 +190,7 @@ def main():
     # Primary Window
     with dpg.window(label="Primary Window", tag="primary-window") as primary_window:
         # Spacing guide: menu bar
-        dpg.add_spacer(width=10, height=10)
+        dpg.add_spacer(width=10, height=14)
 
         # Primary tab bar
         with dpg.tab_bar():

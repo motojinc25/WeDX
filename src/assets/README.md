@@ -31,3 +31,12 @@
 📌 [License](https://www.pexels.com/license/)
 
 - [pexels-nataliya-vaitkevich-8830590.mp4](https://www.pexels.com/video/letter-blocks-and-smartphone-on-the-table-8830590/)
+
+
+## Fonts
+
+### [Google Fonts](https://fonts.google.com/)
+
+- [NotoSansCJKjp-Regular.otf](https://github.com/googlefonts/noto-cjk)
+
+📌 [License](https://fonts.google.com/knowledge/glossary/licensing)
