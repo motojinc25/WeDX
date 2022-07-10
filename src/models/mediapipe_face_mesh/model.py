@@ -64,22 +64,18 @@ class MediaPipeFaceMesh:
 if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--device", help="Camera Device No", type=int, default=0)
+    parser.add_argument("--camera", help="Camera No", type=int, default=0)
     parser.add_argument("--width", help="Camera Width", type=int, default=1280)
     parser.add_argument("--height", help="Camera Height", type=int, default=780)
-    parser.add_argument("--threshold", help="Score Threshold", type=float, default=0.5)
     args = parser.parse_args()
 
     # USB Camera
-    cap = cv.VideoCapture(args.device)
+    cap = cv.VideoCapture(args.camera)
     cap.set(cv.CAP_PROP_FRAME_WIDTH, args.width)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, args.height)
 
     # Model
-    model = MediaPipeFaceMesh(
-        min_detection_confidence=args.threshold,
-        min_tracking_confidence=args.threshold,
-    )
+    model = MediaPipeFaceMesh()
 
     # Inference frame
     while cap.isOpened():

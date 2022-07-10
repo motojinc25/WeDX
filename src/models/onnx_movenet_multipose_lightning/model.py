@@ -5,7 +5,7 @@ import os
 
 import cv2 as cv
 import numpy as np
-import onnxruntime
+import onnxruntime as ort
 
 
 class MoveNetMPL:
@@ -18,16 +18,17 @@ class MoveNetMPL:
             )
         ),
         input_shape=(256, 256),
-        providers=["CPUExecutionProvider"],
+        device="CUDA",
     ):
-        self.onnx_session = onnxruntime.InferenceSession(
+        providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        if device == "CPU":
+            providers = ["CPUExecutionProvider"]
+        self.session = ort.InferenceSession(
             model_path,
             providers=providers,
         )
-        self.input_detail = self.onnx_session.get_inputs()[0]
-        self.input_name = self.input_detail.name
-        self.output_detail = self.onnx_session.get_outputs()[0]
         self.input_shape = input_shape
+        self.input_name = self.session.get_inputs()[0].name
 
     def __call__(self, image):
         image_width, image_height = image.shape[1], image.shape[0]
@@ -37,7 +38,7 @@ class MoveNetMPL:
             -1, self.input_shape[0], self.input_shape[1], 3
         )
         input_image = input_image.astype("int32")
-        outputs = self.onnx_session.run(None, {self.input_name: input_image})
+        outputs = self.session.run(None, {self.input_name: input_image})
         keypoints_with_scores = outputs[0]
         keypoints_with_scores = np.squeeze(keypoints_with_scores)
         results_list = []
@@ -115,23 +116,29 @@ class MoveNetMPL:
                     )
         return image, message
 
+    def set_device(self, device="CUDA"):
+        providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        if device == "CPU":
+            providers = ["CPUExecutionProvider"]
+        self.session.set_providers(providers)
+
 
 if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--device", help="Camera Device No", type=int, default=0)
+    parser.add_argument("--camera", help="Camera No", type=int, default=0)
     parser.add_argument("--width", help="Camera Width", type=int, default=1280)
     parser.add_argument("--height", help="Camera Height", type=int, default=780)
-    parser.add_argument("--threshold", help="Score Threshold", type=float, default=0.5)
+    parser.add_argument("--device", help="Device(CUDA,CPU)", default="CUDA")
     args = parser.parse_args()
 
     # USB Camera
-    cap = cv.VideoCapture(args.device)
+    cap = cv.VideoCapture(args.camera)
     cap.set(cv.CAP_PROP_FRAME_WIDTH, args.width)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, args.height)
 
     # Model
-    model = MoveNetMPL()
+    model = MoveNetMPL(device=args.device)
 
     # Inference frame
     while cap.isOpened():

@@ -2,9 +2,9 @@ import copy
 
 import dearpygui.dearpygui as dpg
 
+from models.cv_yunet.model import YuNet
 from models.mediapipe_face_detection.model import MediaPipeFaceDetection
 from models.mediapipe_face_mesh.model import MediaPipeFaceMesh
-from models.onnx_yunet.model import YuNet
 from nodes.edge_ai_pipeline.base import BaseNode
 
 

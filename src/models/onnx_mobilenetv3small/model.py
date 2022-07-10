@@ -4,7 +4,7 @@ import os
 
 import cv2 as cv
 import numpy as np
-import onnxruntime
+import onnxruntime as ort
 
 imagenet_class_names = {
     0: "Tench",
@@ -1019,25 +1019,25 @@ class MobileNetV3Small:
                 "mobilenetv3small.onnx",
             )
         ),
-        input_size=(224, 224),
-        providers=["CPUExecutionProvider"],
+        input_shape=(224, 224),
+        device="CUDA",
     ):
-        self.onnx_session = onnxruntime.InferenceSession(
+        providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        if device == "CPU":
+            providers = ["CPUExecutionProvider"]
+        self.session = ort.InferenceSession(
             model_path,
             providers=providers,
         )
-        self.input_detail = self.onnx_session.get_inputs()[0]
-        self.input_name = self.input_detail.name
-        self.output_name = self.onnx_session.get_outputs()[0].name
-        self.input_shape = input_size
+        self.input_shape = input_shape
+        self.input_name = self.session.get_inputs()[0].name
 
     def __call__(self, image):
-        input_name = self.onnx_session.get_inputs()[0].name
         message = []
-        results = self.onnx_session.run(
+        outputs = self.session.run(
             None,
             {
-                input_name: np.expand_dims(
+                self.input_name: np.expand_dims(
                     cv.resize(
                         cv.cvtColor(image, cv.COLOR_BGR2RGB),
                         dsize=(self.input_shape[1], self.input_shape[0]),
@@ -1046,10 +1046,9 @@ class MobileNetV3Small:
                 ).astype("float32")
             },
         )
-        results = np.array(results).squeeze()
-        result_sorted_index = np.argsort(results)[::-1][:5]
-        class_scores = results[result_sorted_index]
-        class_ids = result_sorted_index
+        outputs = np.array(outputs).squeeze()
+        class_ids = np.argsort(outputs)[::-1][:5]
+        class_scores = outputs[class_ids]
         for index, (class_score, class_id) in enumerate(zip(class_scores, class_ids)):
             score = "%.2f" % class_score
             text = "%s:%s(%s)" % (
@@ -1074,23 +1073,29 @@ class MobileNetV3Small:
             )
         return image, message
 
+    def set_device(self, device="CUDA"):
+        providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        if device == "CPU":
+            providers = ["CPUExecutionProvider"]
+        self.session.set_providers(providers)
+
 
 if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--device", help="Camera Device No", type=int, default=0)
+    parser.add_argument("--camera", help="Camera No", type=int, default=0)
     parser.add_argument("--width", help="Camera Width", type=int, default=1280)
     parser.add_argument("--height", help="Camera Height", type=int, default=780)
-    parser.add_argument("--threshold", help="Score Threshold", type=float, default=0.5)
+    parser.add_argument("--device", help="Device(CUDA,CPU)", default="CUDA")
     args = parser.parse_args()
 
     # USB Camera
-    cap = cv.VideoCapture(args.device)
+    cap = cv.VideoCapture(args.camera)
     cap.set(cv.CAP_PROP_FRAME_WIDTH, args.width)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, args.height)
 
     # Model
-    model = MobileNetV3Small()
+    model = MobileNetV3Small(device=args.device)
 
     # Inference frame
     while cap.isOpened():

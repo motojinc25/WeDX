@@ -1,0 +1,5 @@
+# common dependencies
+-r common.txt
+
+# specific dependencies
+onnxruntime==1.11.1

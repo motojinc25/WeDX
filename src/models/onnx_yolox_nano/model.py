@@ -5,7 +5,7 @@ import os
 
 import cv2 as cv
 import numpy as np
-import onnxruntime
+import onnxruntime as ort
 
 coco_class_names = {
     0: "person",
@@ -104,32 +104,34 @@ class YOLOXNano:
         nms_th=0.45,
         nms_score_th=0.1,
         with_p6=False,
-        providers=["CPUExecutionProvider"],
+        input_shape=(416, 416),
+        device="CUDA",
     ):
+        providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        if device == "CPU":
+            providers = ["CPUExecutionProvider"]
         self.class_score_th = class_score_th
         self.nms_th = nms_th
         self.nms_score_th = nms_score_th
         self.with_p6 = with_p6
-        self.onnx_session = onnxruntime.InferenceSession(
+        self.session = ort.InferenceSession(
             model_path,
             providers=providers,
         )
-        self.input_detail = self.onnx_session.get_inputs()[0]
-        self.input_name = self.input_detail.name
-        self.output_name = self.onnx_session.get_outputs()[0].name
-        self.input_shape = self.input_detail.shape[2:]
+        self.input_shape = input_shape
+        self.input_name = self.session.get_inputs()[0].name
 
     def __call__(self, image):
         temp_image = copy.deepcopy(image)
         image_height, image_width = image.shape[0], image.shape[1]
         temp_image, ratio = self._preprocess(temp_image, self.input_shape)
         message = []
-        results = self.onnx_session.run(
+        outputs = self.session.run(
             None,
             {self.input_name: temp_image[None, :, :, :]},
         )
         bboxes, scores, class_ids = self._postprocess(
-            results[0],
+            outputs[0],
             self.input_shape,
             ratio,
             self.nms_th,
@@ -138,8 +140,8 @@ class YOLOXNano:
             image_height,
             p6=self.with_p6,
         )
-        score_th=0.4
-        thickness=3
+        score_th = 0.4
+        thickness = 3
         for bbox, score, class_id in zip(bboxes, scores, class_ids):
             x1, y1, x2, y2 = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
             if score_th > score:
@@ -332,23 +334,29 @@ class YOLOXNano:
         )
         return color
 
+    def set_device(self, device="CUDA"):
+        providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        if device == "CPU":
+            providers = ["CPUExecutionProvider"]
+        self.session.set_providers(providers)
+
 
 if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--device", help="Camera Device No", type=int, default=0)
+    parser.add_argument("--camera", help="Camera No", type=int, default=0)
     parser.add_argument("--width", help="Camera Width", type=int, default=1280)
     parser.add_argument("--height", help="Camera Height", type=int, default=780)
-    parser.add_argument("--threshold", help="Score Threshold", type=float, default=0.5)
+    parser.add_argument("--device", help="Device(CUDA,CPU)", default="CUDA")
     args = parser.parse_args()
 
     # USB Camera
-    cap = cv.VideoCapture(args.device)
+    cap = cv.VideoCapture(args.camera)
     cap.set(cv.CAP_PROP_FRAME_WIDTH, args.width)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, args.height)
 
     # Model
-    model = YOLOXNano()
+    model = YOLOXNano(device=args.device)
 
     # Inference frame
     while cap.isOpened():
