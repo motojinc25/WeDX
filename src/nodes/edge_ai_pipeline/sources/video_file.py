@@ -72,11 +72,35 @@ class EdgeAINode(BaseNode):
                 attribute_type=dpg.mvNode_Attr_Static,
             ):
                 dpg.add_spacer(height=5)
-                dpg.add_button(
-                    label="Select Video File",
-                    width=self.settings["node_width"],
-                    callback=lambda: dpg.show_item("file_dialog_video:" + str(node_id)),
-                )
+                with dpg.group(horizontal=True):
+                    dpg.add_button(
+                        label="1",
+                        tag=dag_node_tag + ":video_file:0",
+                        width=self.settings["node_width"] * 0.075,
+                        user_data=dag_node_tag + ":video_file:0",
+                        callback=self.callback_show_video,
+                    )
+                    dpg.add_button(
+                        label="2",
+                        tag=dag_node_tag + ":video_file:1",
+                        width=self.settings["node_width"] * 0.075,
+                        user_data=dag_node_tag + ":video_file:1",
+                        callback=self.callback_show_video,
+                    )
+                    dpg.add_button(
+                        label="3",
+                        tag=dag_node_tag + ":video_file:2",
+                        width=self.settings["node_width"] * 0.075,
+                        user_data=dag_node_tag + ":video_file:2",
+                        callback=self.callback_show_video,
+                    )
+                    dpg.add_button(
+                        label="Select Video File",
+                        width=self.settings["node_width"] * 0.65,
+                        callback=lambda: dpg.show_item(
+                            "file_dialog_video:" + str(node_id)
+                        ),
+                    )
 
             # Add a checkbox for video loop and Add slider for skip rate
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
@@ -210,3 +234,19 @@ class EdgeAINode(BaseNode):
         if app_data["file_name"] != ".":
             node_id = sender.split(":")[1]
             self.configs["movie_paths"][node_id] = app_data["file_path_name"]
+
+    def callback_show_video(self, sender, app_data, user_data):
+        node_id = user_data.split(":")[0]
+        fileList = [
+            "airport_-_36510(Original).mp4",
+            "D0002161071_00000.mp4",
+            "pexels-nataliya-vaitkevich-8830590.mp4",
+        ]
+        filePath = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "../../../assets/videos/",
+                fileList[int(user_data.split(":")[3])],
+            )
+        )
+        self.configs["movie_paths"][node_id] = filePath
