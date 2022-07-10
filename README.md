@@ -7,7 +7,7 @@ Edge AI Pipeline functionality from edge to cloud
 
 ## 📌 Installation
 
-### Windows
+### Windows(amd64)
 
 - Prerequisites
   - [Git client](https://git-scm.com/downloads/)
@@ -19,11 +19,11 @@ C:\> cd WeDX
 C:\> python -m venv .venv
 C:\> .venv\Scripts\activate.bat
 C:\> python -m pip install --upgrade pip
-C:\> python -m pip install -r requirements.txt
+C:\> python -m pip install -r requirements/win_amd64.txt
 C:\> python src/main.py
 ```
 
-### macOS or Linux
+### macOS(x86_64)
 
 - Prerequisites
   - [Python 3.8 ~ 3.9](https://www.python.org/downloads/macos/)
@@ -34,7 +34,22 @@ $ cd WeDX
 $ python3 -m venv .venv
 $ source .venv/bin/activate
 $ pip3 install --upgrade pip
-$ pip3 install -r requirements.txt
+$ pip3 install -r requirements/macos_x86_64.txt
+$ python3 src/main.py
+```
+
+### Linux(x86_64)
+
+- Prerequisites
+  - Python 3.8 ~ 3.9
+
+```bash
+$ git clone https://github.com/motojinc25/WeDX
+$ cd WeDX
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip3 install --upgrade pip
+$ pip3 install -r requirements/manylinux_x86_64.txt
 $ python3 src/main.py
 ```
 
