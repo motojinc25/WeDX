@@ -21,8 +21,8 @@ class EdgeAINode(BaseNode):
 
     def add_node(self, parent, node_id, pos=[0, 0]):
         # Describe node attribute tags
-        dag_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        dag_pin_tags = self.get_tag_list(dag_node_tag)
+        dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        dpg_pin_tags = self.get_tag_list(dpg_node_tag)
 
         # Add a dynamic texture and a raw texture
         with dpg.texture_registry(show=False):
@@ -32,33 +32,33 @@ class EdgeAINode(BaseNode):
                 self.get_blank_texture(
                     self.settings["node_width"], self.settings["node_height"]
                 ),
-                tag=dag_node_tag + ":texture",
+                tag=dpg_node_tag + ":texture",
                 format=dpg.mvFormat_Float_rgba,
             )
 
         # Add a node to a node editor
-        with dpg.node(tag=dag_node_tag, parent=parent, label=self.name, pos=pos):
+        with dpg.node(tag=dpg_node_tag, parent=parent, label=self.name, pos=pos):
             # Add pins that allows linking inputs and outputs
             with dpg.node_attribute(
                 attribute_type=dpg.mvNode_Attr_Input,
-                tag=dag_pin_tags[self.VIDEO_IN],
+                tag=dpg_pin_tags[self.VIDEO_IN],
             ):
                 dpg.add_text("VIDEO IN")
             with dpg.node_attribute(
                 attribute_type=dpg.mvNode_Attr_Input,
                 shape=dpg.mvNode_PinShape_Quad,
-                tag=dag_pin_tags[self.MESSAGE_IN],
+                tag=dpg_pin_tags[self.MESSAGE_IN],
             ):
                 dpg.add_text("MESSAGE IN")
             with dpg.node_attribute(
                 attribute_type=dpg.mvNode_Attr_Output,
-                tag=dag_pin_tags[self.VIDEO_OUT],
+                tag=dpg_pin_tags[self.VIDEO_OUT],
             ):
                 dpg.add_text("VIDEO OUT")
             with dpg.node_attribute(
                 attribute_type=dpg.mvNode_Attr_Output,
                 shape=dpg.mvNode_PinShape_Quad,
-                tag=dag_pin_tags[self.MESSAGE_OUT],
+                tag=dpg_pin_tags[self.MESSAGE_OUT],
             ):
                 dpg.add_text("MESSAGE OUT")
 
@@ -69,28 +69,28 @@ class EdgeAINode(BaseNode):
                     list(self.configs["models"].keys()),
                     default_value=list(self.configs["models"].keys())[0],
                     width=self.settings["node_width"],
-                    tag=dag_node_tag + ":model",
+                    tag=dpg_node_tag + ":model",
                 )
 
             # Add an image from a specified texture
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
-                dpg.add_image(dag_node_tag + ":texture")
+                dpg.add_image(dpg_node_tag + ":texture")
 
         # Return Dear PyGui Tag
-        return dag_node_tag
+        return dpg_node_tag
 
     def update(self, node_id, node_links, node_frames, node_messages):
-        dag_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         frame = None
         message = None
         model_class = self.configs["models"][
-            dpg.get_value(dag_node_tag + ":model")
-            if dpg.does_item_exist(dag_node_tag + ":model")
+            dpg.get_value(dpg_node_tag + ":model")
+            if dpg.does_item_exist(dpg_node_tag + ":model")
             else None
         ]
         model_name = (
-            dpg.get_value(dag_node_tag + ":model")
-            if dpg.does_item_exist(dag_node_tag + ":model")
+            dpg.get_value(dpg_node_tag + ":model")
+            if dpg.does_item_exist(dpg_node_tag + ":model")
             else None
         )
 
@@ -116,8 +116,8 @@ class EdgeAINode(BaseNode):
                 self.settings["node_width"],
                 self.settings["node_height"],
             )
-            if dpg.does_item_exist(dag_node_tag + ":texture"):
-                dpg.set_value(dag_node_tag + ":texture", texture)
+            if dpg.does_item_exist(dpg_node_tag + ":texture"):
+                dpg.set_value(dpg_node_tag + ":texture", texture)
 
             # Generate message
             if message is None:
@@ -137,23 +137,23 @@ class EdgeAINode(BaseNode):
         pass
 
     def delete(self, node_id):
-        dag_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        dpg.delete_item(dag_node_tag + ":texture")
-        dpg.delete_item(dag_node_tag)
+        dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        dpg.delete_item(dpg_node_tag + ":texture")
+        dpg.delete_item(dpg_node_tag)
 
     def get_export_params(self, node_id):
-        dag_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         params = {}
         params["version"] = self.version
-        params["position"] = dpg.get_item_pos(dag_node_tag)
+        params["position"] = dpg.get_item_pos(dpg_node_tag)
         params["model"] = (
-            dpg.get_value(dag_node_tag + ":model")
-            if dpg.does_item_exist(dag_node_tag + ":model")
+            dpg.get_value(dpg_node_tag + ":model")
+            if dpg.does_item_exist(dpg_node_tag + ":model")
             else None
         )
         return params
 
     def set_import_params(self, node_id, params):
-        dag_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        if dpg.does_item_exist(dag_node_tag + ":model"):
-            dpg.set_value(dag_node_tag + ":model", params["model"])
+        dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        if dpg.does_item_exist(dpg_node_tag + ":model"):
+            dpg.set_value(dpg_node_tag + ":model", params["model"])
