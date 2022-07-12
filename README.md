@@ -2,7 +2,7 @@
 
 Edge AI Pipeline functionality from edge to cloud
 
-![image](docs/assets/images/wedx_v0.1.0.png)
+![image](docs/assets/images/wedx.png)
 
 
 ## 📌 Installation
