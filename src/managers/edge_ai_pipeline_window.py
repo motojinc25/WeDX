@@ -26,6 +26,7 @@ class EdgeAIPipelineWindow:
     def create_widgets(self):
         # Export/Import File Dialog
         with dpg.file_dialog(
+            label="Export Pipeline",
             directory_selector=False,
             show=False,
             modal=True,
@@ -40,6 +41,7 @@ class EdgeAIPipelineWindow:
             dpg.add_file_extension(".wedx")
             dpg.add_file_extension("", color=(150, 255, 150, 255))
         with dpg.file_dialog(
+            label="Import Pipeline",
             directory_selector=False,
             show=False,
             modal=True,
@@ -102,46 +104,6 @@ class EdgeAIPipelineWindow:
         # Add windows for Edge AI Pipeline
         with dpg.group(horizontal=True):
             with dpg.child_window(width=230, autosize_y=True):
-                # Control node button theme
-                with dpg.theme(tag="control_node_theme"):
-                    with dpg.theme_component(dpg.mvButton):
-                        dpg.add_theme_color(
-                            dpg.mvThemeCol_Button, self.hsv_to_rgb(4.2, 10.6, 0.6)
-                        )
-                        dpg.add_theme_color(
-                            dpg.mvThemeCol_ButtonActive,
-                            self.hsv_to_rgb(7.0, 0.8, 0.8),
-                        )
-                        dpg.add_theme_color(
-                            dpg.mvThemeCol_ButtonHovered,
-                            self.hsv_to_rgb(7.0, 0.7, 0.7),
-                        )
-                        dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
-                        dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 3, 3)
-
-                # Create control node widgets
-                with dpg.group(horizontal=True):
-                    dpg.add_button(
-                        tag="menu_new",
-                        label="New",
-                        callback=self.callback_new_menu,
-                    )
-                    dpg.bind_item_theme("menu_new", "control_node_theme")
-                    dpg.add_button(
-                        tag="menu_file_dialog_export",
-                        label="Export",
-                        callback=self.callback_file_dialog_export_menu,
-                        user_data="menu_file_dialog_export",
-                    )
-                    dpg.bind_item_theme("menu_file_dialog_export", "control_node_theme")
-                    dpg.add_button(
-                        tag="menu_file_dialog_import",
-                        label="Import",
-                        callback=self.callback_file_dialog_import_menu,
-                        user_data="menu_file_dialog_import",
-                    )
-                    dpg.bind_item_theme("menu_file_dialog_import", "control_node_theme")
-
                 # Editor node button theme
                 with dpg.theme(tag="editor_node_theme"):
                     with dpg.theme_component(dpg.mvButton):
@@ -158,9 +120,6 @@ class EdgeAIPipelineWindow:
                         )
                         dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
                         dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 3, 3)
-
-                # Spacing guide: collapsing header
-                dpg.add_spacer(width=3, height=3)
 
                 # Create node widgets
                 menus = OrderedDict(
@@ -345,15 +304,6 @@ class EdgeAIPipelineWindow:
             node_connection_list.insert(0, (unfinded_value, []))
         return OrderedDict(node_connection_list)
 
-    def callback_file_dialog_export_menu(self, sender, app_data, user_data):
-        dpg.show_item("file_dialog_export")
-
-    def callback_file_dialog_import_menu(self, sender, app_data, user_data):
-        if self.node_id == 0:
-            dpg.show_item("file_dialog_import")
-        else:
-            dpg.configure_item("modal_import_failure", show=True)
-
     def callback_new_pipeline(self, sender, app_data, user_data):
         dpg.configure_item("modal_new_pipeline", show=False)
         for dpg_node_tag in self.node_tags:
@@ -363,9 +313,6 @@ class EdgeAIPipelineWindow:
         self.node_tags = []
         self.node_links = []
         self.node_id = 0
-
-    def callback_new_menu(self, sender, app_data, user_data):
-        dpg.configure_item("modal_new_pipeline", show=True)
 
     def callback_file_dialog_export(self, sender, app_data, user_data):
         export_data = {}
@@ -384,7 +331,7 @@ class EdgeAIPipelineWindow:
             json.dump(export_data, fp, indent=2)
 
     def callback_file_dialog_import(self, sender, app_data, user_data):
-        if app_data["file_name"] != ".":
+        if os.path.exists(app_data["file_path_name"]):
             import_data = None
             with open(app_data["file_path_name"]) as fp:
                 import_data = json.load(fp)
@@ -458,3 +405,6 @@ class EdgeAIPipelineWindow:
             return (255 * t, 255 * p, 255 * v)
         if i == 5:
             return (255 * v, 255 * p, 255 * q)
+
+    def get_node_id(self):
+        return self.node_id

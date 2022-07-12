@@ -40,3 +40,17 @@
 📌 [License](https://fonts.google.com/knowledge/glossary/licensing)
 
 - [NotoSansCJKjp-Regular.otf](https://github.com/googlefonts/noto-cjk)
+
+
+## Icons
+
+### [icooon-mono](https://icooon-mono.com/)
+
+📌 [License](https://icooon-mono.com/license/)
+
+- [import.png](https://icooon-mono.com/00178-無料のダウンロードのアイコン素材/)
+- [new.png](https://icooon-mono.com/12230-新しいウィンドウで開くボタン-2)
+- [active_play.png](https://icooon-mono.com/15443-再生ボタン/)
+- [inactive_play.png](https://icooon-mono.com/15443-再生ボタン/)
+- [active_stop.png](https://icooon-mono.com/15452-再生停止ボタン/)
+- [inactive_stop.png](https://icooon-mono.com/15452-再生停止ボタン/)

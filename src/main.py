@@ -11,6 +11,7 @@ import cv2
 import dearpygui.dearpygui as dpg
 
 from managers.edge_ai_pipeline_window import EdgeAIPipelineWindow
+from managers.toolbar_window import ToolbarWindow
 from version import __version__
 
 
@@ -51,6 +52,7 @@ def main():
             caps.append(cap)
     settings["device_no_list"] = valid_usb_cameras
     settings["camera_capture_list"] = caps
+    settings["state"] = "active"
 
     # Create Dear PyGui Context
     dpg.create_context()
@@ -187,16 +189,22 @@ def main():
                 callback=lambda: dpg.show_imgui_demo(),
             )
 
+    # Window objects
+    tab_edge = EdgeAIPipelineWindow(settings=settings)
+    toolbar = ToolbarWindow(settings=settings, edgeaiwindow=tab_edge)
+
     # Primary Window
     with dpg.window(label="Primary Window", tag="primary-window") as primary_window:
-        # Spacing guide: menu bar
-        dpg.add_spacer(width=10, height=14)
+        # Spacing guide: tool bar
+        dpg.add_spacer(width=10, height=15)
+
+        # Primary toolbar
+        toolbar.create_widgets()
 
         # Primary tab bar
         with dpg.tab_bar():
             # Edge AI Pipeline tab
             with dpg.tab(label="Edge AI Pipeline"):
-                tab_edge = EdgeAIPipelineWindow(settings=settings)
                 tab_edge.create_widgets()
 
         # Set the primary window
@@ -213,21 +221,22 @@ def main():
     node_messages = {}
     while dpg.is_dearpygui_running():
         node_list = tab_edge.get_node_list()
-        for node_id_name in node_list:
-            if node_id_name not in node_frames:
-                node_frames[node_id_name] = None
-            if node_id_name not in node_messages:
-                node_messages[node_id_name] = None
-            node_id, node_name = node_id_name.split(":")
-            node_instance = tab_edge.get_node_instance(node_name)
-            frame, message = node_instance.update(
-                node_id,
-                tab_edge.node_link_graph.get(node_id_name, []),
-                node_frames,
-                node_messages,
-            )
-            node_frames[node_id_name] = frame
-            node_messages[node_id_name] = message
+        if settings["state"] == "active":
+            for node_id_name in node_list:
+                if node_id_name not in node_frames:
+                    node_frames[node_id_name] = None
+                if node_id_name not in node_messages:
+                    node_messages[node_id_name] = None
+                node_id, node_name = node_id_name.split(":")
+                node_instance = tab_edge.get_node_instance(node_name)
+                frame, message = node_instance.update(
+                    node_id,
+                    tab_edge.node_link_graph.get(node_id_name, []),
+                    node_frames,
+                    node_messages,
+                )
+                node_frames[node_id_name] = frame
+                node_messages[node_id_name] = message
 
         # Render Dear PyGui frame
         dpg.render_dearpygui_frame()
