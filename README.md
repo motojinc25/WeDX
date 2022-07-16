@@ -1,8 +1,38 @@
 # WeDX
 
-Edge AI Pipeline functionality from edge to cloud
-
 ![image](docs/assets/images/wedx.png)
+
+<div align="center">
+
+### Edge AI Pipeline functionality from Edge to Cloud
+
+</div>
+
+----
+
+## 📌 Key Features
+
+- No-code experience to easily build Edge AI pipeline.
+- Support Windows, macOS and Linux OS.
+- Three steps in Edge AI pipeline : Source, Process, and Sink.
+  - Source nodes
+    - USB Camera
+    - RTSP Camera
+    - Image File
+    - Video File
+  - Process nodes
+    - Image Classification
+    - Azure Custom Vision
+    - QRCode Detection
+    - Face Detection
+    - Object Detection
+    - Pose Detection
+  - Sink nodes
+    - Azure IoT Message
+    - Record File
+  - Debugging nodes (Option)
+    - Message Screen
+    - Video Screen
 
 
 ## 📌 Installation
