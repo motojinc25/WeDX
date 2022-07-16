@@ -2,24 +2,69 @@
 """WeDX - Edge AI Pipeline functionality"""
 
 import argparse
+import asyncio
 import json
 import os
+import signal
 import sys
+import threading
+import time
 import webbrowser
 
 import cv2
 import dearpygui.dearpygui as dpg
+import dearpygui.demo as demo
 
 from managers.edge_ai_pipeline_window import EdgeAIPipelineWindow
 from managers.toolbar_window import ToolbarWindow
 from version import __version__
+
+# Event indicating client stop
+stop_event = threading.Event()
 
 
 def callback_open_website(sender, app_data, user_data):
     webbrowser.open(user_data)
 
 
-def main():
+def update_frame(tab_edge_window, settings):
+    node_frames = {}
+    node_messages = {}
+    prev_frame_time = 0
+    new_frame_time = 0
+    while not stop_event.is_set():
+        new_frame_time = time.time()
+        time_elapsed = new_frame_time - prev_frame_time
+        node_list = tab_edge_window.get_node_list()
+        if time_elapsed > 1.0 / settings["fps"]:
+            prev_frame_time = new_frame_time
+            if settings["state"] == "active":
+                for node_id_name in node_list:
+                    if node_id_name not in node_frames:
+                        node_frames[node_id_name] = None
+                    if node_id_name not in node_messages:
+                        node_messages[node_id_name] = None
+                    node_id, node_name = node_id_name.split(":")
+                    node_instance = tab_edge_window.get_node_instance(node_name)
+                    frame, message = node_instance.update(
+                        node_id,
+                        tab_edge_window.node_link_graph.get(node_id_name, []),
+                        node_frames,
+                        node_messages,
+                    )
+                    node_frames[node_id_name] = frame
+                    node_messages[node_id_name] = message
+
+
+async def main():
+    # Define a handler to cleanup
+    def termination_handler(signal, frame):
+        dpg.stop_dearpygui()
+
+    # Set termination handler
+    signal.signal(signal.SIGINT, termination_handler)
+    signal.signal(signal.SIGTERM, termination_handler)
+
     # Arguments
     current_path = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser()
@@ -29,7 +74,6 @@ def main():
         default=os.path.abspath(os.path.join(current_path, ".wedx/settings.json")),
     )
     parser.add_argument("--skip_detect_cameras", action="store_true")
-    parser.add_argument("--detect_camera_count", type=int, default=2)
     args = parser.parse_args()
 
     # Set window settings
@@ -41,7 +85,7 @@ def main():
     valid_usb_cameras = []
     caps = []
     if not args.skip_detect_cameras:
-        for i in range(args.detect_camera_count):
+        for i in range(settings["detect_camera_count"]):
             cap = cv2.VideoCapture(i)
             if cap.isOpened():
                 valid_usb_cameras.append(i)
@@ -52,7 +96,6 @@ def main():
             caps.append(cap)
     settings["device_no_list"] = valid_usb_cameras
     settings["camera_capture_list"] = caps
-    settings["state"] = "active"
 
     # Create Dear PyGui Context
     dpg.create_context()
@@ -185,8 +228,12 @@ def main():
                 callback=lambda: dpg.show_tool(dpg.mvTool_ItemRegistry),
             )
             dpg.add_menu_item(
-                label="Show Demo",
+                label="Show Dear ImGui Demo",
                 callback=lambda: dpg.show_imgui_demo(),
+            )
+            dpg.add_menu_item(
+                label="Show Dear PyGui Demo",
+                callback=lambda: demo.show_demo(),
             )
 
     # Window objects
@@ -216,30 +263,16 @@ def main():
     # Show Dear PyGui Viewport
     dpg.show_viewport()
 
-    # Below replaces, dpg.start_dearpygui() for updating nodes
-    node_frames = {}
-    node_messages = {}
-    while dpg.is_dearpygui_running():
-        node_list = tab_edge.get_node_list()
-        if settings["state"] == "active":
-            for node_id_name in node_list:
-                if node_id_name not in node_frames:
-                    node_frames[node_id_name] = None
-                if node_id_name not in node_messages:
-                    node_messages[node_id_name] = None
-                node_id, node_name = node_id_name.split(":")
-                node_instance = tab_edge.get_node_instance(node_name)
-                frame, message = node_instance.update(
-                    node_id,
-                    tab_edge.node_link_graph.get(node_id_name, []),
-                    node_frames,
-                    node_messages,
-                )
-                node_frames[node_id_name] = frame
-                node_messages[node_id_name] = message
+    # Run updating frame in the event loop
+    loop = asyncio.get_event_loop()
+    frame_finished = loop.run_in_executor(None, update_frame, tab_edge, settings)
 
-        # Render Dear PyGui frame
-        dpg.render_dearpygui_frame()
+    # Prepare viewport
+    dpg.start_dearpygui()
+
+    # Wait for updating frame
+    stop_event.set()
+    await frame_finished
 
     # Release nodes
     node_list = tab_edge.get_node_list()
@@ -261,4 +294,4 @@ if __name__ == "__main__":
         raise Exception(
             "WeDX requires python 3.8+. Current version of Python: %s" % sys.version
         )
-    sys.exit(main())
+    sys.exit(asyncio.run(main()))

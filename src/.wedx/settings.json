@@ -1,4 +1,7 @@
 {
+  "detect_camera_count": 2,
+  "fps": 30,
+  "state": "active",
   "usb_camera_width": 1280,
   "usb_camera_height": 720,
   "viewport_width": 1280,

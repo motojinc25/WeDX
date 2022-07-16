@@ -46,6 +46,20 @@ class ToolbarWindow:
                 callback=self._callback_stop,
                 tag="toolbar:stop",
             )
+            dpg.add_spacer(height=2)
+            dpg.add_spacer(height=2)
+            dpg.add_slider_int(
+                label="FPS",
+                default_value=self.settings["fps"],
+                vertical=True,
+                min_value=1,
+                max_value=30,
+                height=40,
+                callback=self._callback_fps,
+            )
+
+    def _callback_fps(self, sender, app_data, user_data):
+        self.settings["fps"] = app_data
 
     def _callback_new(self, sender, app_data, user_data):
         dpg.configure_item("modal_new_pipeline", show=True)
