@@ -127,6 +127,11 @@ class EdgeAINode(BaseNode):
                     user_data=dpg_node_tag,
                     tag=dpg_node_tag + ":connect",
                 )
+                dpg.add_loading_indicator(
+                    style=0,
+                    show=False,
+                    tag=dpg_node_tag + ":loading",
+                )
 
             # Add an image from a specified texture
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
@@ -161,11 +166,13 @@ class EdgeAINode(BaseNode):
                 if dpg_node_tag in self.configs["instances"]:
                     if dpg_node_tag in self.configs["state"]:
                         if self.configs["state"][dpg_node_tag] == "active":
+                            dpg.configure_item(dpg_node_tag + ":loading", show=True)
                             frame, inference_message = self.configs["instances"][
                                 dpg_node_tag
                             ](frame)
                             self.configs["message"][dpg_node_tag] = inference_message
                             self.configs["state"][dpg_node_tag] = "inactive"
+                            dpg.configure_item(dpg_node_tag + ":loading", show=False)
 
             # Draw landmarks
             if dpg_node_tag in self.configs["message"]:
