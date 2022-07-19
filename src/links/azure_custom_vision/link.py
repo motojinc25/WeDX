@@ -9,7 +9,7 @@ import requests
 from PIL import Image
 
 
-class AzureCustomVisionAPI:
+class AzureCustomVision:
     client = False
     url = None
     key = None
@@ -78,7 +78,9 @@ class AzureCustomVisionAPI:
                         )
                     cv.putText(
                         image,
-                        prediction["tagName"],
+                        prediction["tagName"]
+                        + " "
+                        + "{:.2f}".format(prediction["probability"]),
                         (int(x1), int(y1)),
                         cv.FONT_HERSHEY_SIMPLEX,
                         1.0,
@@ -104,7 +106,7 @@ if __name__ == "__main__":
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, args.height)
 
     # Link service
-    service = AzureCustomVisionAPI()
+    service = AzureCustomVision()
     service.connect(url=args.url, key=args.key)
     if not service.client:
         print("CredentialError")

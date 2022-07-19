@@ -104,20 +104,29 @@ class EdgeAIPipelineWindow:
         # Add windows for Edge AI Pipeline
         with dpg.group(horizontal=True):
             with dpg.child_window(width=230, autosize_y=True):
-                # Editor node button theme
-                with dpg.theme(tag="editor_node_theme"):
+                # Editor group node button theme
+                with dpg.theme(tag="theme_editor_group_sources"):
                     with dpg.theme_component(dpg.mvButton):
-                        dpg.add_theme_color(
-                            dpg.mvThemeCol_Button, self.hsv_to_rgb(2.8, 0.6, 0.6)
-                        )
-                        dpg.add_theme_color(
-                            dpg.mvThemeCol_ButtonActive,
-                            self.hsv_to_rgb(7.0, 0.8, 0.8),
-                        )
-                        dpg.add_theme_color(
-                            dpg.mvThemeCol_ButtonHovered,
-                            self.hsv_to_rgb(7.0, 0.7, 0.7),
-                        )
+                        dpg.add_theme_color(dpg.mvThemeCol_Button, [51, 102, 0])
+                        dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [76, 153, 0])
+                        dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
+                        dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 3, 3)
+                with dpg.theme(tag="theme_editor_group_processors"):
+                    with dpg.theme_component(dpg.mvButton):
+                        dpg.add_theme_color(dpg.mvThemeCol_Button, [102, 51, 0])
+                        dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [153, 76, 0])
+                        dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
+                        dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 3, 3)
+                with dpg.theme(tag="theme_editor_group_sinks"):
+                    with dpg.theme_component(dpg.mvButton):
+                        dpg.add_theme_color(dpg.mvThemeCol_Button, [102, 0, 102])
+                        dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [153, 0, 153])
+                        dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
+                        dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 3, 3)
+                with dpg.theme(tag="theme_editor_group_debugging"):
+                    with dpg.theme_component(dpg.mvButton):
+                        dpg.add_theme_color(dpg.mvThemeCol_Button, [0, 51, 102])
+                        dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [0, 76, 153])
                         dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
                         dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 3, 3)
 
@@ -165,7 +174,8 @@ class EdgeAIPipelineWindow:
                                 width=-1,
                             )
                             dpg.bind_item_theme(
-                                "menu_" + base_node_tag, "editor_node_theme"
+                                "menu_" + base_node_tag,
+                                "theme_editor_group_" + menu_info[1],
                             )
                             self.menu_instances[base_node_tag] = node
 

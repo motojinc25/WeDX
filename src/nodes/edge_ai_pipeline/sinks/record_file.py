@@ -11,6 +11,8 @@ class EdgeAINode(BaseNode):
     def __init__(self, settings):
         self.version = "0.1.0"
         self.name = "Record File"
+        self.theme_titlebar = [102, 0, 102]
+        self.theme_titlebar_selected = [153, 0, 153]
         self.settings = settings
         self.configs = {}
         self.configs["video_writer_classes"] = {}
@@ -36,7 +38,34 @@ class EdgeAINode(BaseNode):
             )
 
         # Add a node to a node editor
-        with dpg.node(tag=dpg_node_tag, parent=parent, label=self.name, pos=pos):
+        with dpg.node(
+            tag=dpg_node_tag, parent=parent, label=self.name, pos=pos
+        ) as dpg_node:
+            # Set node color
+            with dpg.theme() as dpg_theme:
+                with dpg.theme_component(dpg.mvNode):
+                    dpg.add_theme_color(
+                        dpg.mvNodeCol_TitleBar,
+                        self.theme_titlebar,
+                        category=dpg.mvThemeCat_Nodes,
+                    )
+                    dpg.add_theme_color(
+                        dpg.mvNodeCol_TitleBarHovered,
+                        self.theme_titlebar_selected,
+                        category=dpg.mvThemeCat_Nodes,
+                    )
+                    dpg.add_theme_color(
+                        dpg.mvNodeCol_TitleBarSelected,
+                        self.theme_titlebar_selected,
+                        category=dpg.mvThemeCat_Nodes,
+                    )
+                    dpg.add_theme_color(
+                        dpg.mvNodeCol_NodeOutline,
+                        self.theme_titlebar,
+                        category=dpg.mvThemeCat_Nodes,
+                    )
+                    dpg.bind_item_theme(dpg_node, dpg_theme)
+
             # Add pins that allows linking inputs and outputs
             with dpg.node_attribute(
                 attribute_type=dpg.mvNode_Attr_Input,
@@ -133,7 +162,7 @@ class EdgeAINode(BaseNode):
                 self.configs["video_writer_classes"][dpg_node_tag] = cv2.VideoWriter(
                     video_writer_directory + "/" + startup_time_text + ".mp4",
                     cv2.VideoWriter_fourcc(*"mp4v"),
-                    self.settings["video_writer_fps"],
+                    self.settings["fps"],
                     (
                         self.settings["video_writer_width"],
                         self.settings["video_writer_height"],

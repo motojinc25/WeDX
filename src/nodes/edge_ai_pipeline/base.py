@@ -9,6 +9,8 @@ import numpy as np
 class BaseNode(metaclass=ABCMeta):
     version = "0.0.0"
     name = "Base"
+    theme_titlebar = [102, 51, 0]
+    theme_titlebar_selected = [153, 76, 0]
     settings = None  # Dear PyGui Window setting
     configs = {}  # Dear PyGui Node config
 

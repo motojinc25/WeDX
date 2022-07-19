@@ -10,6 +10,8 @@ class EdgeAINode(BaseNode):
     def __init__(self, settings):
         self.version = "0.1.0"
         self.name = "Video File"
+        self.theme_titlebar = [51, 102, 0]
+        self.theme_titlebar_selected = [76, 153, 0]
         self.settings = settings
         self.configs = {}
         self.configs["video_captures"] = {}
@@ -53,7 +55,34 @@ class EdgeAINode(BaseNode):
             dpg.add_file_extension("", color=(150, 255, 150, 255))
 
         # Add a node to a node editor
-        with dpg.node(tag=dpg_node_tag, parent=parent, label=self.name, pos=pos):
+        with dpg.node(
+            tag=dpg_node_tag, parent=parent, label=self.name, pos=pos
+        ) as dpg_node:
+            # Set node color
+            with dpg.theme() as dpg_theme:
+                with dpg.theme_component(dpg.mvNode):
+                    dpg.add_theme_color(
+                        dpg.mvNodeCol_TitleBar,
+                        self.theme_titlebar,
+                        category=dpg.mvThemeCat_Nodes,
+                    )
+                    dpg.add_theme_color(
+                        dpg.mvNodeCol_TitleBarHovered,
+                        self.theme_titlebar_selected,
+                        category=dpg.mvThemeCat_Nodes,
+                    )
+                    dpg.add_theme_color(
+                        dpg.mvNodeCol_TitleBarSelected,
+                        self.theme_titlebar_selected,
+                        category=dpg.mvThemeCat_Nodes,
+                    )
+                    dpg.add_theme_color(
+                        dpg.mvNodeCol_NodeOutline,
+                        self.theme_titlebar,
+                        category=dpg.mvThemeCat_Nodes,
+                    )
+                    dpg.bind_item_theme(dpg_node, dpg_theme)
+
             # Add pins that allows linking inputs and outputs
             with dpg.node_attribute(
                 attribute_type=dpg.mvNode_Attr_Output,
