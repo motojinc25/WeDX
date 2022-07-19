@@ -13,6 +13,7 @@
 ## 📌 Key Features
 
 - No-code experience to easily build Edge AI pipeline.
+- Simple pipeline, Easy to understand code.
 - Support Windows, macOS and Linux OS.
 - Three steps in Edge AI pipeline : Source, Process, and Sink.
   - Source nodes
@@ -22,7 +23,12 @@
     - Video File
   - Process nodes
     - Image Classification
-    - Azure Custom Vision
+    - Azure Custom Vision (Cloud)
+      - Classification
+      - Object Detection
+    - Azure Custom Vision (Offline)
+      - Classification
+      - Object Detection
     - QRCode Detection
     - Face Detection
     - Object Detection
