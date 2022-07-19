@@ -13,6 +13,5 @@
   "debugging_height": 360,
   "video_writer_width": 1280,
   "video_writer_height": 720,
-  "video_writer_fps": 30,
   "video_writer_directory": "./records"
 }
