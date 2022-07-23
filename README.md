@@ -10,11 +10,16 @@
 
 ----
 
+[![WeDX](https://img.shields.io/badge/WeDX-v0.6.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.6.0)
+[![License](https://img.shields.io/badge/License-GPL-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
+
 ## 📌 Key Features
 
 - No-code experience to easily build Edge AI pipeline.
 - Simple pipeline, Easy to understand code.
 - Support Windows, macOS and Linux OS.
+- Import and export node configuration.
+- Asynchronous processing of frame refresh.
 - Three steps in Edge AI pipeline : Source, Process, and Sink.
   - Source nodes
     - USB Camera
@@ -36,6 +41,8 @@
   - Sink nodes
     - Azure IoT Message
     - Record File
+    - MQTT Camera
+    - MQTT Message
   - Debugging nodes (Option)
     - Message Screen
     - Video Screen
@@ -47,7 +54,7 @@
 
 - Prerequisites
   - [Git client](https://git-scm.com/downloads/)
-  - [Python 3.8 ~ 3.9](https://www.python.org/downloads/windows/)
+  - [Python 3.9](https://www.python.org/downloads/windows/)
 
 ```
 C:\> git clone https://github.com/motojinc25/WeDX
@@ -62,7 +69,7 @@ C:\> python src/main.py
 ### macOS(x86_64)
 
 - Prerequisites
-  - [Python 3.8 ~ 3.9](https://www.python.org/downloads/macos/)
+  - [Python 3.9](https://www.python.org/downloads/macos/)
 
 ```bash
 $ git clone https://github.com/motojinc25/WeDX
@@ -77,7 +84,7 @@ $ python3 src/main.py
 ### Linux(x86_64)
 
 - Prerequisites
-  - Python 3.8 ~ 3.9
+  - Python 3.9
 
 ```bash
 $ git clone https://github.com/motojinc25/WeDX
