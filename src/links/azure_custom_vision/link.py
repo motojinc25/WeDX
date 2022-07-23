@@ -49,6 +49,7 @@ class AzureCustomVision:
     def prediction(self, image):
         message = []
         if self.client:
+            image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
             image = Image.fromarray(image)
             image_binary = io.BytesIO()
             image.save(image_binary, format="png")
