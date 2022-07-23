@@ -13,7 +13,7 @@ class EdgeAINode(BaseNode):
         self.theme_titlebar_selected = [0, 76, 153]
         self.settings = settings
 
-    def add_node(self, parent, node_id, pos=[0, 0]):
+    def add_node(self, parent, node_id, pos):
         # Describe node attribute tags
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg_pin_tags = self.get_tag_list(dpg_node_tag)
@@ -64,7 +64,7 @@ class EdgeAINode(BaseNode):
         # Return Dear PyGui Tag
         return dpg_node_tag
 
-    def update(self, node_id, node_links, node_frames, node_messages):
+    async def refresh(self, node_id, node_links, node_frames, node_messages):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         message = None
 

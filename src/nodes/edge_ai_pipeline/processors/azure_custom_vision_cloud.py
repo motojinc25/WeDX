@@ -14,16 +14,16 @@ class EdgeAINode(BaseNode):
         self.theme_titlebar_selected = [153, 76, 0]
         self.settings = settings
         self.configs = {}
-        self.configs["links"] = {
+        self.configs["link"] = {
             "Prediction API": AzureCustomVision,
         }
         self.configs["instances"] = {}
-        self.configs["state"] = {}
-        self.configs["message"] = {}
-        self.configs["label_start"] = "Connect"
-        self.configs["label_stop"] = "Prediction"
+        self.configs["messages"] = {}
+        self.configs["frames"] = {}
+        self.configs["label_connect"] = "Connect"
+        self.configs["label_prediction"] = "Prediction"
 
-    def add_node(self, parent, node_id, pos=[0, 0]):
+    def add_node(self, parent, node_id, pos):
         # Describe node attribute tags
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg_pin_tags = self.get_tag_list(dpg_node_tag)
@@ -114,8 +114,8 @@ class EdgeAINode(BaseNode):
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
                 dpg.add_spacer(height=5)
                 dpg.add_combo(
-                    list(self.configs["links"].keys()),
-                    default_value=list(self.configs["links"].keys())[0],
+                    list(self.configs["link"].keys()),
+                    default_value=list(self.configs["link"].keys())[0],
                     width=self.settings["node_width"],
                     callback=self.callback_combo_link,
                     user_data=dpg_node_tag,
@@ -150,7 +150,7 @@ class EdgeAINode(BaseNode):
             # Add a button for prediction
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
                 dpg.add_button(
-                    label=self.configs["label_start"],
+                    label=self.configs["label_connect"],
                     width=self.settings["node_width"],
                     callback=self.callback_button_connect,
                     user_data=dpg_node_tag,
@@ -169,7 +169,7 @@ class EdgeAINode(BaseNode):
         # Return Dear PyGui Tag
         return dpg_node_tag
 
-    def update(self, node_id, node_links, node_frames, node_messages):
+    async def refresh(self, node_id, node_links, node_frames, node_messages):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         frame = None
         message = None
@@ -188,25 +188,12 @@ class EdgeAINode(BaseNode):
         linked_frame = node_frames.get(linked_node_tag, None)
         if linked_frame is not None:
             frame = copy.deepcopy(linked_frame)
-            if (
-                dpg.get_item_label(dpg_node_tag + ":connect")
-                == self.configs["label_stop"]
-            ):
-                if dpg_node_tag in self.configs["instances"]:
-                    if dpg_node_tag in self.configs["state"]:
-                        if self.configs["state"][dpg_node_tag] == "active":
-                            dpg.configure_item(dpg_node_tag + ":loading", show=True)
-                            frame, inference_message = self.configs["instances"][
-                                dpg_node_tag
-                            ](frame)
-                            self.configs["message"][dpg_node_tag] = inference_message
-                            self.configs["state"][dpg_node_tag] = "inactive"
-                            dpg.configure_item(dpg_node_tag + ":loading", show=False)
+            self.configs["frames"][dpg_node_tag] = frame
 
             # Draw landmarks
-            if dpg_node_tag in self.configs["message"]:
+            if dpg_node_tag in self.configs["messages"]:
                 frame = self.configs["instances"][dpg_node_tag].draw_landmarks(
-                    frame, self.configs["message"][dpg_node_tag]
+                    frame, self.configs["messages"][dpg_node_tag]
                 )
 
                 # Generate message
@@ -216,7 +203,7 @@ class EdgeAINode(BaseNode):
                     {
                         "type": "processor",
                         "subtype": self.name.lower().replace(" ", "_"),
-                        "inference": self.configs["message"][dpg_node_tag],
+                        "inference": self.configs["messages"][dpg_node_tag],
                     }
                 )
 
@@ -246,17 +233,20 @@ class EdgeAINode(BaseNode):
         params = {}
         params["version"] = self.version
         params["position"] = dpg.get_item_pos(dpg_node_tag)
-        params["link"] = (
-            dpg.get_value(dpg_node_tag + ":link")
-            if dpg.does_item_exist(dpg_node_tag + ":link")
-            else None
-        )
+        params["link"] = dpg.get_value(dpg_node_tag + ":link")
+        if params["link"] == "Prediction API":
+            params["url"] = dpg.get_value(dpg_node_tag + ":url")
+            params["key"] = dpg.get_value(dpg_node_tag + ":key")
         return params
 
     def set_import_params(self, node_id, params):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        if dpg.does_item_exist(dpg_node_tag + ":link"):
+        if "link" in params:
             dpg.set_value(dpg_node_tag + ":link", params["link"])
+        if "url" in params:
+            dpg.set_value(dpg_node_tag + ":url", params["url"])
+        if "key" in params:
+            dpg.set_value(dpg_node_tag + ":key", params["key"])
 
     def callback_combo_link(self, sender, data, user_data):
         dpg_node_tag = user_data
@@ -265,9 +255,12 @@ class EdgeAINode(BaseNode):
 
     def callback_button_connect(self, sender, data, user_data):
         dpg_node_tag = user_data
-        if dpg.get_item_label(dpg_node_tag + ":connect") == self.configs["label_start"]:
+        if (
+            dpg.get_item_label(dpg_node_tag + ":connect")
+            == self.configs["label_connect"]
+        ):
             if dpg_node_tag not in self.configs["instances"]:
-                link_class = self.configs["links"][
+                link_class = self.configs["link"][
                     dpg.get_value(dpg_node_tag + ":link")
                     if dpg.does_item_exist(dpg_node_tag + ":link")
                     else None
@@ -281,17 +274,24 @@ class EdgeAINode(BaseNode):
                     )
             if self.configs["instances"][dpg_node_tag].client:
                 dpg.set_item_label(
-                    dpg_node_tag + ":connect", self.configs["label_stop"]
+                    dpg_node_tag + ":connect", self.configs["label_prediction"]
                 )
                 dpg.disable_item(dpg_node_tag + ":link")
-                self.configs["state"][dpg_node_tag] = "inactive"
             else:
                 del self.configs["instances"][dpg_node_tag]
                 dpg.set_item_label(
-                    dpg_node_tag + ":connect", self.configs["label_start"]
+                    dpg_node_tag + ":connect", self.configs["label_connect"]
                 )
                 dpg.show_item(dpg_node_tag + ":modal")
         elif (
-            dpg.get_item_label(dpg_node_tag + ":connect") == self.configs["label_stop"]
+            dpg.get_item_label(dpg_node_tag + ":connect")
+            == self.configs["label_prediction"]
         ):
-            self.configs["state"][dpg_node_tag] = "active"
+            if dpg_node_tag in self.configs["frames"]:
+                dpg.configure_item(dpg_node_tag + ":loading", show=True)
+                frame, inference_message = self.configs["instances"][
+                    dpg_node_tag
+                ](self.configs["frames"][dpg_node_tag])
+                self.configs["frames"][dpg_node_tag] = frame
+                self.configs["messages"][dpg_node_tag] = inference_message
+                dpg.configure_item(dpg_node_tag + ":loading", show=False)

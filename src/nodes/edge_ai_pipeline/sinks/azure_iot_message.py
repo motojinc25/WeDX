@@ -20,10 +20,10 @@ class EdgeAINode(BaseNode):
             "Azure IoT Hub DPS": AzureIoTHubDPS,
         }
         self.configs["instances"] = {}
-        self.configs["label_start"] = "Connect"
-        self.configs["label_stop"] = "Connected"
+        self.configs["label_connect"] = "Connect"
+        self.configs["label_connected"] = "Connected"
 
-    def add_node(self, parent, node_id, pos=[0, 0]):
+    def add_node(self, parent, node_id, pos):
         # Describe node attribute tags
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg_pin_tags = self.get_tag_list(dpg_node_tag)
@@ -73,6 +73,7 @@ class EdgeAINode(BaseNode):
                         category=dpg.mvThemeCat_Nodes,
                     )
                     dpg.bind_item_theme(dpg_node, dpg_theme)
+
             # Add pins that allows linking inputs and outputs
             with dpg.node_attribute(
                 attribute_type=dpg.mvNode_Attr_Input,
@@ -158,7 +159,7 @@ class EdgeAINode(BaseNode):
             # Add a button for publishing
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
                 dpg.add_button(
-                    label=self.configs["label_start"],
+                    label=self.configs["label_connect"],
                     width=self.settings["node_width"],
                     callback=self.callback_button_connect,
                     user_data=dpg_node_tag,
@@ -168,7 +169,7 @@ class EdgeAINode(BaseNode):
         # Return Dear PyGui Tag
         return dpg_node_tag
 
-    def update(self, node_id, node_links, node_frames, node_messages):
+    async def refresh(self, node_id, node_links, node_frames, node_messages):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         message = None
 
@@ -183,7 +184,7 @@ class EdgeAINode(BaseNode):
         if message is not None:
             if (
                 dpg.get_item_label(dpg_node_tag + ":connect")
-                == self.configs["label_stop"]
+                == self.configs["label_connected"]
             ):
                 if dpg_node_tag in self.configs["instances"]:
                     self.configs["instances"][dpg_node_tag].send_message(message)
@@ -206,10 +207,35 @@ class EdgeAINode(BaseNode):
         params = {}
         params["version"] = self.version
         params["position"] = dpg.get_item_pos(dpg_node_tag)
+        params["link"] = dpg.get_value(dpg_node_tag + ":link")
+        if params["link"] == "Azure IoT Central":
+            params["scope"] = dpg.get_value(dpg_node_tag + ":scope")
+            params["rid"] = dpg.get_value(dpg_node_tag + ":rid")
+            params["key"] = dpg.get_value(dpg_node_tag + ":key")
+        elif params["link"] == "Azure IoT Hub":
+            params["string"] = dpg.get_value(dpg_node_tag + ":string")
+        elif params["link"] == "Azure IoT Hub DPS":
+            params["host"] = dpg.get_value(dpg_node_tag + ":host")
+            params["scope"] = dpg.get_value(dpg_node_tag + ":scope")
+            params["rid"] = dpg.get_value(dpg_node_tag + ":rid")
+            params["key"] = dpg.get_value(dpg_node_tag + ":key")
+            pass
         return params
 
     def set_import_params(self, node_id, params):
-        pass
+        dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        if "link" in params:
+            dpg.set_value(dpg_node_tag + ":link", params["link"])
+        if "scope" in params:
+            dpg.set_value(dpg_node_tag + ":scope", params["scope"])
+        if "rid" in params:
+            dpg.set_value(dpg_node_tag + ":rid", params["rid"])
+        if "key" in params:
+            dpg.set_value(dpg_node_tag + ":key", params["key"])
+        if "string" in params:
+            dpg.set_value(dpg_node_tag + ":string", params["string"])
+        if "host" in params:
+            dpg.set_value(dpg_node_tag + ":host", params["host"])
 
     def callback_combo_link(self, sender, data, user_data):
         dpg_node_tag = user_data
@@ -249,7 +275,10 @@ class EdgeAINode(BaseNode):
 
     def callback_button_connect(self, sender, data, user_data):
         dpg_node_tag = user_data
-        if dpg.get_item_label(dpg_node_tag + ":connect") == self.configs["label_start"]:
+        if (
+            dpg.get_item_label(dpg_node_tag + ":connect")
+            == self.configs["label_connect"]
+        ):
             if dpg_node_tag not in self.configs["instances"]:
                 link_class = self.configs["links"][
                     dpg.get_value(dpg_node_tag + ":link")
@@ -277,19 +306,20 @@ class EdgeAINode(BaseNode):
                     )
             if self.configs["instances"][dpg_node_tag].device_client is not None:
                 dpg.set_item_label(
-                    dpg_node_tag + ":connect", self.configs["label_stop"]
+                    dpg_node_tag + ":connect", self.configs["label_connected"]
                 )
                 dpg.disable_item(dpg_node_tag + ":link")
             else:
                 del self.configs["instances"][dpg_node_tag]
                 dpg.set_item_label(
-                    dpg_node_tag + ":connect", self.configs["label_start"]
+                    dpg_node_tag + ":connect", self.configs["label_connect"]
                 )
                 dpg.show_item(dpg_node_tag + ":modal")
         elif (
-            dpg.get_item_label(dpg_node_tag + ":connect") == self.configs["label_stop"]
+            dpg.get_item_label(dpg_node_tag + ":connect")
+            == self.configs["label_connected"]
         ):
             self.configs["instances"][dpg_node_tag].release()
             del self.configs["instances"][dpg_node_tag]
-            dpg.set_item_label(dpg_node_tag + ":connect", self.configs["label_start"])
+            dpg.set_item_label(dpg_node_tag + ":connect", self.configs["label_connect"])
             dpg.enable_item(dpg_node_tag + ":link")

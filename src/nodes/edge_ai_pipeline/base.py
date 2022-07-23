@@ -11,8 +11,8 @@ class BaseNode(metaclass=ABCMeta):
     name = "Base"
     theme_titlebar = [102, 51, 0]
     theme_titlebar_selected = [153, 76, 0]
-    settings = None  # Dear PyGui Window setting
-    configs = {}  # Dear PyGui Node config
+    settings = None  # WeDX settings
+    configs = None  # Each node configuration
 
     # Video and Message position constants
     VIDEO_IN = 0
@@ -25,7 +25,7 @@ class BaseNode(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def update(self, node_id, node_links, node_frames, node_messages):
+    async def refresh(self, node_id, node_links, node_frames, node_messages):
         pass
 
     @abstractmethod

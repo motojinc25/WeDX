@@ -15,12 +15,12 @@ class EdgeAINode(BaseNode):
         self.theme_titlebar_selected = [153, 0, 153]
         self.settings = settings
         self.configs = {}
-        self.configs["video_writer_classes"] = {}
+        self.configs["video_writers"] = {}
+        self.configs["prev_frame_flags"] = {}
         self.configs["label_start"] = "Start"
         self.configs["label_stop"] = "Stop"
-        self.configs["prev_frame_flag"] = False
 
-    def add_node(self, parent, node_id, pos=[0, 0]):
+    def add_node(self, parent, node_id, pos):
         # Describe node attribute tags
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg_pin_tags = self.get_tag_list(dpg_node_tag)
@@ -91,8 +91,10 @@ class EdgeAINode(BaseNode):
         # Return Dear PyGui Tag
         return dpg_node_tag
 
-    def update(self, node_id, node_links, node_frames, node_messages):
+    async def refresh(self, node_id, node_links, node_frames, node_messages):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        if dpg_node_tag not in self.configs["prev_frame_flags"]:
+            self.configs["prev_frame_flags"][dpg_node_tag] = False
 
         # Get linked node tag
         linked_node_tag = None
@@ -104,7 +106,7 @@ class EdgeAINode(BaseNode):
         # Get frame
         linked_frame = node_frames.get(linked_node_tag, None)
         if linked_frame is not None:
-            if dpg_node_tag in self.configs["video_writer_classes"]:
+            if dpg_node_tag in self.configs["video_writers"]:
                 frame = cv2.resize(
                     linked_frame,
                     (
@@ -112,7 +114,7 @@ class EdgeAINode(BaseNode):
                         self.settings["video_writer_height"],
                     ),
                 )
-                self.configs["video_writer_classes"][dpg_node_tag].write(frame)
+                self.configs["video_writers"][dpg_node_tag].write(frame)
             texture = self.get_image_texture(
                 linked_frame,
                 self.settings["node_width"],
@@ -120,21 +122,24 @@ class EdgeAINode(BaseNode):
             )
             if dpg.does_item_exist(dpg_node_tag + ":texture"):
                 dpg.set_value(dpg_node_tag + ":texture", texture)
-            self.configs["prev_frame_flag"] = True
+            self.configs["prev_frame_flags"][dpg_node_tag] = True
         else:
             label = dpg.get_item_label(dpg_node_tag + ":record")
-            if label == self.configs["label_stop"] and self.configs["prev_frame_flag"]:
+            if (
+                label == self.configs["label_stop"]
+                and self.configs["prev_frame_flags"][dpg_node_tag]
+            ):
                 self.callback_button_recording(None, None, dpg_node_tag)
-            self.configs["prev_frame_flag"] = False
+            self.configs["prev_frame_flags"][dpg_node_tag] = False
 
         # Return Dear PyGui Tag
         return None, None
 
     def close(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        if dpg_node_tag in self.configs["video_writer_classes"]:
-            self.configs["video_writer_classes"][dpg_node_tag].release()
-            self.configs["video_writer_classes"].pop(dpg_node_tag)
+        if dpg_node_tag in self.configs["video_writers"]:
+            self.configs["video_writers"][dpg_node_tag].release()
+            del self.configs["video_writers"][dpg_node_tag]
 
     def delete(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
@@ -158,8 +163,8 @@ class EdgeAINode(BaseNode):
             startup_time_text = datetime_now.strftime("%Y%m%d_%H%M%S")
             video_writer_directory = self.settings["video_writer_directory"]
             os.makedirs(video_writer_directory, exist_ok=True)
-            if dpg_node_tag not in self.configs["video_writer_classes"]:
-                self.configs["video_writer_classes"][dpg_node_tag] = cv2.VideoWriter(
+            if dpg_node_tag not in self.configs["video_writers"]:
+                self.configs["video_writers"][dpg_node_tag] = cv2.VideoWriter(
                     video_writer_directory + "/" + startup_time_text + ".mp4",
                     cv2.VideoWriter_fourcc(*"mp4v"),
                     self.settings["fps"],
@@ -170,6 +175,6 @@ class EdgeAINode(BaseNode):
                 )
             dpg.set_item_label(dpg_node_tag + ":record", self.configs["label_stop"])
         elif dpg.get_item_label(dpg_node_tag + ":record") == self.configs["label_stop"]:
-            self.configs["video_writer_classes"][dpg_node_tag].release()
-            self.configs["video_writer_classes"].pop(dpg_node_tag)
+            self.configs["video_writers"][dpg_node_tag].release()
+            del self.configs["video_writers"][dpg_node_tag]
             dpg.set_item_label(dpg_node_tag + ":record", self.configs["label_start"])

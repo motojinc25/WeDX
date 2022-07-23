@@ -11,7 +11,7 @@ class EdgeAINode(BaseNode):
         self.theme_titlebar_selected = [76, 153, 0]
         self.settings = settings
 
-    def add_node(self, parent, node_id, pos=[0, 0]):
+    def add_node(self, parent, node_id, pos):
         # Describe node attribute tags
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg_pin_tags = self.get_tag_list(dpg_node_tag)
@@ -87,7 +87,7 @@ class EdgeAINode(BaseNode):
         # Return Dear PyGui Tag
         return dpg_node_tag
 
-    def update(self, node_id, node_links, node_frames, node_messages):
+    async def refresh(self, node_id, node_links, node_frames, node_messages):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         frame = None
         message = None
@@ -98,7 +98,7 @@ class EdgeAINode(BaseNode):
             if dpg.does_item_exist(dpg_node_tag + ":device")
             else None
         )
-        if device_no != "":
+        if device_no != "" and device_no is not None:
             device_no = int(device_no)
             camera_index = self.settings["device_no_list"].index(device_no)
             camera_capture = self.settings["camera_capture_list"][camera_index]
@@ -142,7 +142,14 @@ class EdgeAINode(BaseNode):
         params = {}
         params["version"] = self.version
         params["position"] = dpg.get_item_pos(dpg_node_tag)
+        params["device"] = dpg.get_value(dpg_node_tag + ":device")
         return params
 
     def set_import_params(self, node_id, params):
-        pass
+        dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        if (
+            "device" in params
+            and len(params["device"]) > 0
+            and int(params["device"]) in self.settings["device_no_list"]
+        ):
+            dpg.set_value(dpg_node_tag + ":device", params["device"])

@@ -3,11 +3,11 @@
 
 import argparse
 import asyncio
+import graphlib
 import json
 import os
 import signal
 import sys
-import threading
 import time
 import webbrowser
 
@@ -19,42 +19,25 @@ from managers.edge_ai_pipeline_window import EdgeAIPipelineWindow
 from managers.toolbar_window import ToolbarWindow
 from version import __version__
 
-# Event indicating client stop
-stop_event = threading.Event()
-
 
 def callback_open_website(sender, app_data, user_data):
     webbrowser.open(user_data)
 
-
-def update_frame(tab_edge_window, settings):
-    node_frames = {}
-    node_messages = {}
-    prev_frame_time = 0
-    new_frame_time = 0
-    while not stop_event.is_set():
-        new_frame_time = time.time()
-        time_elapsed = new_frame_time - prev_frame_time
-        node_list = tab_edge_window.get_node_list()
-        if time_elapsed > 1.0 / settings["fps"]:
-            prev_frame_time = new_frame_time
-            if settings["state"] == "active":
-                for node_id_name in node_list:
-                    if node_id_name not in node_frames:
-                        node_frames[node_id_name] = None
-                    if node_id_name not in node_messages:
-                        node_messages[node_id_name] = None
-                    node_id, node_name = node_id_name.split(":")
-                    node_instance = tab_edge_window.get_node_instance(node_name)
-                    frame, message = node_instance.update(
-                        node_id,
-                        tab_edge_window.node_link_graph.get(node_id_name, []),
-                        node_frames,
-                        node_messages,
-                    )
-                    node_frames[node_id_name] = frame
-                    node_messages[node_id_name] = message
-
+async def refresh_frame(tab_edge, dpg_node_tag, node_frames, node_messages):
+    if dpg_node_tag not in node_frames:
+        node_frames[dpg_node_tag] = None
+    if dpg_node_tag not in node_messages:
+        node_messages[dpg_node_tag] = None
+    node_id, node_name = dpg_node_tag.split(":")
+    node_instance = tab_edge.get_node_instance(node_name)
+    frame, message = await node_instance.refresh(
+        node_id,
+        tab_edge.node_link_graph.get(dpg_node_tag, []),
+        node_frames,
+        node_messages,
+    )
+    node_frames[dpg_node_tag] = frame
+    node_messages[dpg_node_tag] = message
 
 async def main():
     # Define a handler to cleanup
@@ -263,16 +246,30 @@ async def main():
     # Show Dear PyGui Viewport
     dpg.show_viewport()
 
-    # Run updating frame in the event loop
-    loop = asyncio.get_event_loop()
-    frame_finished = loop.run_in_executor(None, update_frame, tab_edge, settings)
+    # Below replaces, dpg.start_dearpygui() for updating nodes
+    node_frames = {}
+    node_messages = {}
+    prev_frame_time = 0
+    new_frame_time = 0
+    while dpg.is_dearpygui_running():
+        new_frame_time = time.time()
+        time_elapsed = new_frame_time - prev_frame_time
+        if time_elapsed > 1.0 / settings["fps"]:
+            prev_frame_time = new_frame_time
+            if settings["state"] == "active":
+                graph = tab_edge.node_refresh_graph
+                ts = graphlib.TopologicalSorter(graph)
+                ts.prepare()
+                while ts.is_active():
+                    ready_nodes = ts.get_ready()
+                    tasks = []
+                    for dpg_node_tag in ready_nodes:
+                        tasks.append(asyncio.create_task(refresh_frame(tab_edge, dpg_node_tag, node_frames, node_messages)))
+                    await asyncio.wait(tasks)
+                    ts.done(*ready_nodes)
 
-    # Prepare viewport
-    dpg.start_dearpygui()
-
-    # Wait for updating frame
-    stop_event.set()
-    await frame_finished
+        # Render Dear PyGui frame
+        dpg.render_dearpygui_frame()
 
     # Release nodes
     node_list = tab_edge.get_node_list()
@@ -290,8 +287,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    if not sys.version >= "3.8":
+    if not sys.version >= "3.9":
         raise Exception(
-            "WeDX requires python 3.8+. Current version of Python: %s" % sys.version
+            "WeDX requires python 3.9+. Current version of Python: %s" % sys.version
         )
     sys.exit(asyncio.run(main()))

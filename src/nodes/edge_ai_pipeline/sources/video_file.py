@@ -15,11 +15,11 @@ class EdgeAINode(BaseNode):
         self.settings = settings
         self.configs = {}
         self.configs["video_captures"] = {}
-        self.configs["movie_paths"] = {}
-        self.configs["prev_movie_paths"] = {}
+        self.configs["video_paths"] = {}
+        self.configs["prev_video_paths"] = {}
         self.configs["frame_counts"] = {}
 
-    def add_node(self, parent, node_id, pos=[0, 0]):
+    def add_node(self, parent, node_id, pos):
         # Describe node attribute tags
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg_pin_tags = self.get_tag_list(dpg_node_tag)
@@ -48,6 +48,7 @@ class EdgeAINode(BaseNode):
                     "../../../assets/videos/",
                 )
             ),
+            user_data=dpg_node_tag,
             callback=self.callback_file_dialog,
             id="file_dialog_video:" + str(node_id),
         ):
@@ -156,50 +157,45 @@ class EdgeAINode(BaseNode):
         # Return Dear PyGui Tag
         return dpg_node_tag
 
-    def update(self, node_id, node_links, node_frames, node_messages):
+    async def refresh(self, node_id, node_links, node_frames, node_messages):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         frame = None
         message = None
+        movie_path = None
+        prev_movie_path = None
 
         # Get video path
-        movie_path = self.configs["movie_paths"].get(str(node_id), None)
-        prev_movie_path = self.configs["prev_movie_paths"].get(str(node_id), None)
+        if dpg_node_tag in self.configs["video_paths"]:
+            movie_path = self.configs["video_paths"][dpg_node_tag]
+        if dpg_node_tag in self.configs["prev_video_paths"]:
+            prev_movie_path = self.configs["prev_video_paths"][dpg_node_tag]
         if prev_movie_path != movie_path:
-            video_capture = self.configs["video_captures"].get(str(node_id), None)
-            if video_capture is not None:
-                video_capture.release()
-            self.configs["video_captures"][str(node_id)] = cv2.VideoCapture(movie_path)
-            self.configs["prev_movie_paths"][str(node_id)] = movie_path
-            self.configs["frame_counts"][str(node_id)] = 0
-        video_capture = self.configs["video_captures"].get(str(node_id), None)
-        loop_flag = (
-            dpg.get_value(dpg_node_tag + ":loop")
-            if dpg.does_item_exist(dpg_node_tag + ":loop")
-            else None
-        )
-        skip_rate = int(
-            dpg.get_value(dpg_node_tag + ":skiprate")
-            if dpg.does_item_exist(dpg_node_tag + ":skiprate")
-            else None
-        )
+            if dpg_node_tag in self.configs["video_captures"]:
+                self.configs["video_captures"][dpg_node_tag].release()
+            self.configs["video_captures"][dpg_node_tag] = cv2.VideoCapture(movie_path)
+            self.configs["prev_video_paths"][dpg_node_tag] = movie_path
+            self.configs["frame_counts"][dpg_node_tag] = 0
+        loop_flag = dpg.get_value(dpg_node_tag + ":loop")
+        skip_rate = int(dpg.get_value(dpg_node_tag + ":skiprate"))
 
         # capturing from Video file
-        if video_capture is not None:
+        if dpg_node_tag in self.configs["video_captures"]:
             while True:
-                ret, frame = video_capture.read()
+                ret, frame = self.configs["video_captures"][dpg_node_tag].read()
                 if not ret:
                     if loop_flag:
-                        video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                        _, frame = video_capture.read()
+                        self.configs["video_captures"][dpg_node_tag].set(
+                            cv2.CAP_PROP_POS_FRAMES, 0
+                        )
+                        _, frame = self.configs["video_captures"][dpg_node_tag].read()
                     else:
-                        video_capture.release()
-                        video_capture = None
-                        self.configs["movie_paths"].pop(str(node_id))
-                        self.configs["prev_movie_paths"].pop(str(node_id))
-                        self.configs["video_captures"].pop(str(node_id))
+                        self.configs["video_captures"][dpg_node_tag].release()
+                        del self.configs["video_captures"][dpg_node_tag]
+                        del self.configs["video_paths"][dpg_node_tag]
+                        self.configs["prev_video_paths"][dpg_node_tag]
                         break
-                self.configs["frame_counts"][str(node_id)] += 1
-                if (self.configs["frame_counts"][str(node_id)] % skip_rate) == 0:
+                self.configs["frame_counts"][dpg_node_tag] += 1
+                if (self.configs["frame_counts"][dpg_node_tag] % skip_rate) == 0:
                     break
 
             # Capture frame-by-frame
@@ -217,8 +213,12 @@ class EdgeAINode(BaseNode):
                         "subtype": self.name.lower().replace(" ", "_"),
                         "image": {
                             "source": movie_path,
-                            "width": video_capture.get(cv2.CAP_PROP_FRAME_WIDTH),
-                            "height": video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT),
+                            "width": self.configs["video_captures"][dpg_node_tag].get(
+                                cv2.CAP_PROP_FRAME_WIDTH
+                            ),
+                            "height": self.configs["video_captures"][dpg_node_tag].get(
+                                cv2.CAP_PROP_FRAME_HEIGHT
+                            ),
                         },
                     }
                 ]
@@ -231,6 +231,10 @@ class EdgeAINode(BaseNode):
 
     def delete(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        if dpg_node_tag in self.configs["prev_video_paths"]:
+            del self.configs["prev_video_paths"][dpg_node_tag]
+        if dpg_node_tag in self.configs["video_paths"]:
+            del self.configs["video_paths"][dpg_node_tag]
         dpg.delete_item(dpg_node_tag + ":texture")
         dpg.delete_item("file_dialog_video:" + str(node_id))
         dpg.delete_item(dpg_node_tag)
@@ -250,22 +254,28 @@ class EdgeAINode(BaseNode):
             if dpg.does_item_exist(dpg_node_tag + ":skiprate")
             else None
         )
+        params["video_filepath"] = ""
+        if dpg_node_tag in self.configs["video_paths"]:
+            params["video_filepath"] = self.configs["video_paths"][dpg_node_tag]
         return params
 
     def set_import_params(self, node_id, params):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        if dpg.does_item_exist(dpg_node_tag + ":loop"):
+        if "loop" in params:
             dpg.set_value(dpg_node_tag + ":loop", params["loop"])
-        if dpg.does_item_exist(dpg_node_tag + ":skiprate"):
+        if "skiprate" in params:
             dpg.set_value(dpg_node_tag + ":skiprate", params["skiprate"])
+        if "video_filepath" in params and os.path.exists(params["video_filepath"]):
+            self.configs["video_paths"][dpg_node_tag] = params["video_filepath"]
 
     def callback_file_dialog(self, sender, app_data, user_data):
+        dpg_node_tag = user_data
         if app_data["file_name"] != ".":
-            node_id = sender.split(":")[1]
-            self.configs["movie_paths"][node_id] = app_data["file_path_name"]
+            self.configs["video_paths"][dpg_node_tag] = app_data["file_path_name"]
 
     def callback_show_video(self, sender, app_data, user_data):
         node_id = user_data.split(":")[0]
+        dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         fileList = [
             "airport_-_36510(Original).mp4",
             "D0002161071_00000.mp4",
@@ -278,4 +288,4 @@ class EdgeAINode(BaseNode):
                 fileList[int(user_data.split(":")[3])],
             )
         )
-        self.configs["movie_paths"][node_id] = filePath
+        self.configs["video_paths"][dpg_node_tag] = filePath

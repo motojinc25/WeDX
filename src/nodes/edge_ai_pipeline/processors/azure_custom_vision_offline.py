@@ -23,14 +23,13 @@ class EdgeAINode(BaseNode):
             "ONNX Model Object Detector": CustomVisionObjectDetection,
         }
         self.configs["instances"] = {}
-        self.configs["status"] = {}
-        self.configs["message"] = {}
-        self.configs["model_filepath"] = {}
-        self.configs["labels_filepath"] = {}
-        self.configs["label_start"] = "Connect"
-        self.configs["label_stop"] = "Connected"
+        self.configs["statuses"] = {}
+        self.configs["model_filepaths"] = {}
+        self.configs["labels_filepaths"] = {}
+        self.configs["label_connect"] = "Connect"
+        self.configs["label_connected"] = "Connected"
 
-    def add_node(self, parent, node_id, pos=[0, 0]):
+    def add_node(self, parent, node_id, pos):
         # Describe node attribute tags
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg_pin_tags = self.get_tag_list(dpg_node_tag)
@@ -194,16 +193,11 @@ class EdgeAINode(BaseNode):
             # Add a button for connecting
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
                 dpg.add_button(
-                    label=self.configs["label_start"],
+                    label=self.configs["label_connect"],
                     width=self.settings["node_width"],
                     callback=self.callback_button_connect,
                     user_data=dpg_node_tag,
                     tag=dpg_node_tag + ":connect",
-                )
-                dpg.add_loading_indicator(
-                    style=0,
-                    show=False,
-                    tag=dpg_node_tag + ":loading",
                 )
 
             # Add an image from a specified texture
@@ -213,7 +207,7 @@ class EdgeAINode(BaseNode):
         # Return Dear PyGui Tag
         return dpg_node_tag
 
-    def update(self, node_id, node_models, node_frames, node_messages):
+    async def refresh(self, node_id, node_models, node_frames, node_messages):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         frame = None
         message = None
@@ -270,17 +264,31 @@ class EdgeAINode(BaseNode):
         params = {}
         params["version"] = self.version
         params["position"] = dpg.get_item_pos(dpg_node_tag)
-        params["model"] = (
-            dpg.get_value(dpg_node_tag + ":model")
-            if dpg.does_item_exist(dpg_node_tag + ":model")
-            else None
-        )
+        params["model"] = dpg.get_value(dpg_node_tag + ":model")
+        params["model_filepath"] = ""
+        if dpg_node_tag in self.configs["model_filepaths"]:
+            params["model_filepath"] = self.configs["model_filepaths"][dpg_node_tag]
+        params["labels_filepath"] = ""
+        if dpg_node_tag in self.configs["labels_filepaths"]:
+            params["labels_filepath"] = self.configs["labels_filepaths"][dpg_node_tag]
         return params
 
     def set_import_params(self, node_id, params):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        if dpg.does_item_exist(dpg_node_tag + ":model"):
+        if "model" in params:
             dpg.set_value(dpg_node_tag + ":model", params["model"])
+        if "model_filepath" in params and os.path.exists(params["model_filepath"]):
+            self.configs["model_filepaths"][dpg_node_tag] = params["model_filepath"]
+            dpg.set_value(
+                item=dpg_node_tag + ":modelfile:text",
+                value="Select ONNX Model : selected",
+            )
+        if "labels_filepath" in params and os.path.exists(params["labels_filepath"]):
+            self.configs["labels_filepaths"][dpg_node_tag] = params["labels_filepath"]
+            dpg.set_value(
+                item=dpg_node_tag + ":labelsfile:text",
+                value="Select Model Labels : selected",
+            )
 
     def callback_combo_link(self, sender, data, user_data):
         dpg_node_tag = user_data
@@ -291,7 +299,10 @@ class EdgeAINode(BaseNode):
 
     def callback_button_connect(self, sender, data, user_data):
         dpg_node_tag = user_data
-        if dpg.get_item_label(dpg_node_tag + ":connect") == self.configs["label_start"]:
+        if (
+            dpg.get_item_label(dpg_node_tag + ":connect")
+            == self.configs["label_connect"]
+        ):
             if dpg_node_tag not in self.configs["instances"]:
                 link_class = self.configs["models"][
                     dpg.get_value(dpg_node_tag + ":model")
@@ -301,47 +312,48 @@ class EdgeAINode(BaseNode):
                 dpg.set_item_label(dpg_node_tag + ":connect", "...")
                 self.configs["instances"][dpg_node_tag] = link_class()
                 if (
-                    dpg_node_tag in self.configs["model_filepath"]
-                    and dpg_node_tag in self.configs["labels_filepath"]
+                    dpg_node_tag in self.configs["model_filepaths"]
+                    and dpg_node_tag in self.configs["labels_filepaths"]
                 ):
                     self.configs["instances"][dpg_node_tag].connect(
-                        model_filepath=self.configs["model_filepath"][dpg_node_tag],
-                        labels_filepath=self.configs["labels_filepath"][dpg_node_tag],
+                        model_filepath=self.configs["model_filepaths"][dpg_node_tag],
+                        labels_filepath=self.configs["labels_filepaths"][dpg_node_tag],
                     )
             if self.configs["instances"][dpg_node_tag].is_active:
                 dpg.set_item_label(
-                    dpg_node_tag + ":connect", self.configs["label_stop"]
+                    dpg_node_tag + ":connect", self.configs["label_connected"]
                 )
                 dpg.disable_item(dpg_node_tag + ":model")
                 dpg.disable_item(dpg_node_tag + ":modelfile")
                 dpg.disable_item(dpg_node_tag + ":labelsfile")
-                self.configs["status"][dpg_node_tag] = "active"
+                self.configs["statuses"][dpg_node_tag] = "active"
             else:
                 del self.configs["instances"][dpg_node_tag]
                 dpg.set_item_label(
-                    dpg_node_tag + ":connect", self.configs["label_start"]
+                    dpg_node_tag + ":connect", self.configs["label_connect"]
                 )
                 dpg.show_item(dpg_node_tag + ":modal")
         elif (
-            dpg.get_item_label(dpg_node_tag + ":connect") == self.configs["label_stop"]
+            dpg.get_item_label(dpg_node_tag + ":connect")
+            == self.configs["label_connected"]
         ):
             del self.configs["instances"][dpg_node_tag]
-            dpg.set_item_label(dpg_node_tag + ":connect", self.configs["label_start"])
-            self.configs["status"][dpg_node_tag] = "inactive"
+            dpg.set_item_label(dpg_node_tag + ":connect", self.configs["label_connect"])
+            self.configs["statuses"][dpg_node_tag] = "inactive"
             dpg.enable_item(dpg_node_tag + ":model")
             dpg.enable_item(dpg_node_tag + ":modelfile")
             dpg.enable_item(dpg_node_tag + ":labelsfile")
 
     def callback_file_dialog_model(self, sender, app_data, user_data):
         dpg_node_tag = user_data
-        self.configs["model_filepath"][dpg_node_tag] = app_data["file_path_name"]
+        self.configs["model_filepaths"][dpg_node_tag] = app_data["file_path_name"]
         dpg.set_value(
             item=dpg_node_tag + ":modelfile:text", value="Select ONNX Model : selected"
         )
 
     def callback_file_dialog_labels(self, sender, app_data, user_data):
         dpg_node_tag = user_data
-        self.configs["labels_filepath"][dpg_node_tag] = app_data["file_path_name"]
+        self.configs["labels_filepaths"][dpg_node_tag] = app_data["file_path_name"]
         dpg.set_value(
             item=dpg_node_tag + ":labelsfile:text",
             value="Select Model Labels : selected",

@@ -18,7 +18,8 @@ class EdgeAIPipelineWindow:
     menu_instances = {}
     node_tags = []
     node_links = []
-    node_link_graph = OrderedDict({})
+    node_refresh_graph = {}
+    node_link_graph = {}
 
     def __init__(self, settings=None):
         self.settings = settings
@@ -199,44 +200,36 @@ class EdgeAIPipelineWindow:
     def get_node_list(self):
         return self.node_tags
 
-    def get_sorted_node_connection(self):
-        return self.node_link_graph
-
     def get_node_instance(self, node_name):
         return self.menu_instances.get(node_name, None)
 
     def callback_add_node(self, sender, app_data, user_data):
         self.node_id += 1
         node = self.menu_instances[user_data]
-        last_pos = [0, 0]
-        if self.last_pos is not None:
-            last_pos = [self.last_pos[0] + 30, self.last_pos[1] + 30]
+        if self.last_pos is None:
+            self.last_pos = [0, 0]
+        else:
+            self.last_pos = [self.last_pos[0] + 30, self.last_pos[1] + 30]
         dag_node_tag = node.add_node(
             self.dag_editor_tag,
             self.node_id,
-            pos=last_pos,
+            pos=self.last_pos,
         )
         self.node_tags.append(dag_node_tag)
+        self.set_node_graph(self.node_tags, self.node_links)
 
     def callback_editor_link(self, sender, app_data, user_data):
         source_type = app_data[0].split(":")[2]
         destination_type = app_data[1].split(":")[2]
         if source_type == destination_type:
-            if len(self.node_links) == 0:
+            duplicate_flag = False
+            for node_link in self.node_links:
+                if app_data[1] == node_link[1]:
+                    duplicate_flag = True
+            if not duplicate_flag:
                 dpg.add_node_link(app_data[0], app_data[1], parent=sender)
                 self.node_links.append([app_data[0], app_data[1]])
-            else:
-                duplicate_flag = False
-                for node_link in self.node_links:
-                    if app_data[1] == node_link[1]:
-                        duplicate_flag = True
-                if not duplicate_flag:
-                    dpg.add_node_link(app_data[0], app_data[1], parent=sender)
-                    self.node_links.append([app_data[0], app_data[1]])
-        self.node_link_graph = self.get_node_link_graph(
-            self.node_tags,
-            self.node_links,
-        )
+        self.set_node_graph(self.node_tags, self.node_links)
 
     def callback_editor_delink(self, sender, app_data, user_data):
         self.node_links.remove(
@@ -245,81 +238,43 @@ class EdgeAIPipelineWindow:
                 dpg.get_item_configuration(app_data)["attr_2"],
             ]
         )
-        self.node_link_graph = self.get_node_link_graph(
-            self.node_tags,
-            self.node_links,
-        )
+        self.set_node_graph(self.node_tags, self.node_links)
         dpg.delete_item(app_data)
 
-    def get_node_link_graph(self, node_list, node_link_list):
-        node_id_dict = OrderedDict({})
-        node_connection_dict = OrderedDict({})
-        for node_link_info in node_link_list:
-            source_id = int(node_link_info[0].split(":")[0])
-            destination_id = int(node_link_info[1].split(":")[0])
-            if destination_id not in node_id_dict:
-                node_id_dict[destination_id] = [source_id]
+    def set_node_graph(self, node_tags, node_links):
+        node_refresh_graph = {}
+        node_link_graph = {}
+        for node_link in node_links:
+            src_node_link = node_link[0]
+            dst_node_link = node_link[1]
+            src_dpg_node_tag = ":".join(node_link[0].split(":")[:2])
+            dst_dpg_node_tag = ":".join(dst_node_link.split(":")[:2])
+            if dst_dpg_node_tag not in node_link_graph:
+                node_link_graph[dst_dpg_node_tag] = [[src_node_link, dst_node_link]]
             else:
-                node_id_dict[destination_id].append(source_id)
-            source = node_link_info[0]
-            destination = node_link_info[1]
-            split_destination = destination.split(":")
-            node_name = split_destination[0] + ":" + split_destination[1]
-            if node_name not in node_connection_dict:
-                node_connection_dict[node_name] = [[source, destination]]
+                node_link_graph[dst_dpg_node_tag].append([src_node_link, dst_node_link])
+            if dst_dpg_node_tag not in node_refresh_graph:
+                node_refresh_graph[dst_dpg_node_tag] = [src_dpg_node_tag]
             else:
-                node_connection_dict[node_name].append([source, destination])
-        node_id_list = list(node_id_dict.items())
-        node_connection_list = list(node_connection_dict.items())
-        index = 0
-        while index < len(node_id_list):
-            swap_flag = False
-            for check_id in node_id_list[index][1]:
-                for check_index in range(index + 1, len(node_id_list)):
-                    if node_id_list[check_index][0] == check_id:
-                        node_id_list[check_index], node_id_list[index] = (
-                            node_id_list[index],
-                            node_id_list[check_index],
-                        )
-                        (
-                            node_connection_list[check_index],
-                            node_connection_list[index],
-                        ) = (
-                            node_connection_list[index],
-                            node_connection_list[check_index],
-                        )
-                        swap_flag = True
-                        break
-            if not swap_flag:
-                index += 1
-        index = 0
-        unfinded_id_dict = {}
-        while index < len(node_id_list):
-            for check_id in node_id_list[index][1]:
-                check_index = 0
-                find_flag = False
-                while check_index < len(node_id_list):
-                    if check_id == node_id_list[check_index][0]:
-                        find_flag = True
-                        break
-                    check_index += 1
-                if not find_flag:
-                    for index, dpg_node_tag in enumerate(node_list):
-                        node_id, node_name = dpg_node_tag.split(":")
-                        if node_id == check_id:
-                            unfinded_id_dict[check_id] = dpg_node_tag
-                            break
-            index += 1
-        for unfinded_value in unfinded_id_dict.values():
-            node_connection_list.insert(0, (unfinded_value, []))
-        return OrderedDict(node_connection_list)
+                node_refresh_graph[dst_dpg_node_tag].append(src_dpg_node_tag)
+        for node_tag in node_tags:
+            if node_tag not in node_refresh_graph:
+                node_refresh_graph[node_tag] = []
+        self.node_refresh_graph = node_refresh_graph
+        self.node_link_graph = node_link_graph
 
     def callback_new_pipeline(self, sender, app_data, user_data):
         dpg.configure_item("modal_new_pipeline", show=False)
+        self.node_refresh_graph = {}
+        self.node_link_graph = {}
         for dpg_node_tag in self.node_tags:
             node_id, node_name = dpg_node_tag.split(":")
             node = self.menu_instances[node_name]
-            node.delete(node_id)
+            try:
+                node.delete(node_id)
+            except:
+                pass
+        self.last_pos = None
         self.node_tags = []
         self.node_links = []
         self.node_id = 0
@@ -363,10 +318,7 @@ class EdgeAIPipelineWindow:
                 dpg.add_node_link(
                     node_link[0], node_link[1], parent=self.dag_editor_tag
                 )
-            self.node_link_graph = self.get_node_link_graph(
-                self.node_tags,
-                self.node_links,
-            )
+            self.set_node_graph(self.node_tags, self.node_links)
 
     def callback_save_last_pos(self, sender, app_data, user_data):
         if len(dpg.get_selected_nodes(self.dag_editor_tag)) > 0:
@@ -382,39 +334,16 @@ class EdgeAIPipelineWindow:
             node_instance = self.get_node_instance(node_name)
             node_instance.close(node_id)
             self.node_tags.remove(dpg_node_tag)
-            copy_node_link_list = copy.deepcopy(self.node_links)
-            for link_info in copy_node_link_list:
+            copy_node_links = copy.deepcopy(self.node_links)
+            for link_info in copy_node_links:
                 source_node = link_info[0].split(":")[:2]
                 source_node = ":".join(source_node)
                 destination_node = link_info[1].split(":")[:2]
                 destination_node = ":".join(destination_node)
                 if source_node == dpg_node_tag or destination_node == dpg_node_tag:
                     self.node_links.remove(link_info)
-            self.node_link_graph = self.get_node_link_graph(
-                self.node_tags,
-                self.node_links,
-            )
+            self.set_node_graph(self.node_tags, self.node_links)
             dpg.delete_item(item_id)
-
-    def hsv_to_rgb(self, h, s, v):
-        if s == 0.0:
-            return (v, v, v)
-        i = int(h * 6.0)
-        f = (h * 6.0) - i
-        p, q, t = v * (1.0 - s), v * (1.0 - s * f), v * (1.0 - s * (1.0 - f))
-        i %= 6
-        if i == 0:
-            return (255 * v, 255 * t, 255 * p)
-        if i == 1:
-            return (255 * q, 255 * v, 255 * p)
-        if i == 2:
-            return (255 * p, 255 * v, 255 * t)
-        if i == 3:
-            return (255 * p, 255 * q, 255 * v)
-        if i == 4:
-            return (255 * t, 255 * p, 255 * v)
-        if i == 5:
-            return (255 * v, 255 * p, 255 * q)
 
     def get_node_id(self):
         return self.node_id

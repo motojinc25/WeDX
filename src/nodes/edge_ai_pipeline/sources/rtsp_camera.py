@@ -16,7 +16,7 @@ class EdgeAINode(BaseNode):
         self.configs["label_start"] = "Connect"
         self.configs["label_stop"] = "Connected"
 
-    def add_node(self, parent, node_id, pos=[0, 0]):
+    def add_node(self, parent, node_id, pos):
         # Describe node attribute tags
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg_pin_tags = self.get_tag_list(dpg_node_tag)
@@ -125,7 +125,7 @@ class EdgeAINode(BaseNode):
         # Return Dear PyGui Tag
         return dpg_node_tag
 
-    def update(self, node_id, node_links, node_frames, node_messages):
+    async def refresh(self, node_id, node_links, node_frames, node_messages):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         frame = None
         message = None
@@ -173,6 +173,7 @@ class EdgeAINode(BaseNode):
 
     def delete(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        dpg.delete_item(dpg_node_tag + ":modal")
         dpg.delete_item(dpg_node_tag + ":texture")
         dpg.delete_item(dpg_node_tag)
 
@@ -181,10 +182,13 @@ class EdgeAINode(BaseNode):
         params = {}
         params["version"] = self.version
         params["position"] = dpg.get_item_pos(dpg_node_tag)
+        params["url"] = dpg.get_value(dpg_node_tag + ":url")
         return params
 
     def set_import_params(self, node_id, params):
-        pass
+        dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        if "url" in params:
+            dpg.set_value(dpg_node_tag + ":url", params["url"])
 
     def callback_button_connect(self, sender, app_data, user_data):
         dpg_node_tag = user_data
@@ -198,8 +202,8 @@ class EdgeAINode(BaseNode):
                 dpg.set_item_label(dpg_node_tag + ":connect", "...")
                 try:
                     cap = cv2.VideoCapture(rtsp_url)
-                except cv2.error as e:
-                    print(e)
+                except:
+                    pass
                 if cap.isOpened():
                     self.configs["instances"][dpg_node_tag] = cap
                     dpg.set_item_label(
