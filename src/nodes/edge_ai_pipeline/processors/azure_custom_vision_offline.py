@@ -53,38 +53,38 @@ class EdgeAINode(BaseNode):
 
         # Model/Labels file dialog
         current_path = os.path.dirname(os.path.abspath(__file__))
-        if not dpg.does_item_exist("file_dialog_model"):
-            with dpg.file_dialog(
-                label="ONNX Model",
-                directory_selector=False,
-                show=False,
-                modal=True,
-                height=int(self.settings["viewport_height"] / 2),
-                default_path=os.path.abspath(
-                    os.path.join(current_path, "../../../models/onnx_custom_vision")
-                ),
-                user_data=dpg_node_tag,
-                callback=self.callback_file_dialog_model,
-                id="file_dialog_model",
-            ):
-                dpg.add_file_extension(".onnx")
-                dpg.add_file_extension("", color=(150, 255, 150, 255))
-        if not dpg.does_item_exist("file_dialog_labels"):
-            with dpg.file_dialog(
-                label="Model Labels",
-                directory_selector=False,
-                show=False,
-                modal=True,
-                height=int(self.settings["viewport_height"] / 2),
-                default_path=os.path.abspath(
-                    os.path.join(current_path, "../../../models/onnx_custom_vision")
-                ),
-                user_data=dpg_node_tag,
-                callback=self.callback_file_dialog_labels,
-                id="file_dialog_labels",
-            ):
-                dpg.add_file_extension(".txt")
-                dpg.add_file_extension("", color=(150, 255, 150, 255))
+        with dpg.file_dialog(
+            label="ONNX Model",
+            directory_selector=False,
+            show=False,
+            modal=True,
+            height=int(self.settings["viewport_height"] / 2),
+            default_path=os.path.abspath(
+                os.path.join(current_path, "../../../models/onnx_custom_vision")
+            ),
+            user_data=dpg_node_tag,
+            callback=self.callback_file_dialog_model,
+            id=dpg_node_tag + ":file_dialog_model",
+            tag=dpg_node_tag + ":file_dialog_model",
+        ):
+            dpg.add_file_extension(".onnx")
+            dpg.add_file_extension("", color=(150, 255, 150, 255))
+        with dpg.file_dialog(
+            label="Model Labels",
+            directory_selector=False,
+            show=False,
+            modal=True,
+            height=int(self.settings["viewport_height"] / 2),
+            default_path=os.path.abspath(
+                os.path.join(current_path, "../../../models/onnx_custom_vision")
+            ),
+            user_data=dpg_node_tag,
+            callback=self.callback_file_dialog_labels,
+            id=dpg_node_tag + ":file_dialog_labels",
+            tag=dpg_node_tag + ":file_dialog_labels",
+        ):
+            dpg.add_file_extension(".txt")
+            dpg.add_file_extension("", color=(150, 255, 150, 255))
 
         # Add a dynamic texture and a raw texture
         with dpg.texture_registry(show=False):
@@ -173,7 +173,9 @@ class EdgeAINode(BaseNode):
                     )
                     dpg.add_button(
                         label="File",
-                        callback=lambda: dpg.show_item("file_dialog_model"),
+                        callback=lambda: dpg.show_item(
+                            dpg_node_tag + ":file_dialog_model"
+                        ),
                         user_data=dpg_node_tag,
                         tag=dpg_node_tag + ":modelfile",
                     )
@@ -185,7 +187,9 @@ class EdgeAINode(BaseNode):
                     )
                     dpg.add_button(
                         label="File",
-                        callback=lambda: dpg.show_item("file_dialog_labels"),
+                        callback=lambda: dpg.show_item(
+                            dpg_node_tag + ":file_dialog_labels"
+                        ),
                         user_data=dpg_node_tag,
                         tag=dpg_node_tag + ":labelsfile",
                     )
@@ -256,6 +260,8 @@ class EdgeAINode(BaseNode):
     def delete(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg.delete_item(dpg_node_tag + ":modal")
+        dpg.delete_item(dpg_node_tag + ":file_dialog_model")
+        dpg.delete_item(dpg_node_tag + ":file_dialog_labels")
         dpg.delete_item(dpg_node_tag + ":texture")
         dpg.delete_item(dpg_node_tag)
 
