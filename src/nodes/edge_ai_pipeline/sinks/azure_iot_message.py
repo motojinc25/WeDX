@@ -219,7 +219,6 @@ class EdgeAINode(BaseNode):
             params["scope"] = dpg.get_value(dpg_node_tag + ":scope")
             params["rid"] = dpg.get_value(dpg_node_tag + ":rid")
             params["key"] = dpg.get_value(dpg_node_tag + ":key")
-            pass
         return params
 
     def set_import_params(self, node_id, params):
