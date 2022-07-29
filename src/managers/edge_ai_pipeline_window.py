@@ -265,6 +265,9 @@ class EdgeAIPipelineWindow:
 
     def callback_new_pipeline(self, sender, app_data, user_data):
         dpg.configure_item("modal_new_pipeline", show=False)
+        self.new_pipeline()
+
+    def new_pipeline(self):
         self.node_refresh_graph = {}
         self.node_link_graph = {}
         for dpg_node_tag in self.node_tags:
@@ -280,6 +283,11 @@ class EdgeAIPipelineWindow:
         self.node_id = 0
 
     def callback_file_dialog_export(self, sender, app_data, user_data):
+        export_data = self.export_pipeline()
+        with open(app_data["file_path_name"], "w") as fp:
+            json.dump(export_data, fp, indent=2)
+
+    def export_pipeline(self):
         export_data = {}
         export_data["node_tags"] = self.node_tags
         export_data["node_links"] = self.node_links
@@ -292,14 +300,17 @@ class EdgeAIPipelineWindow:
                 "name": str(node_name),
                 "params": params,
             }
-        with open(app_data["file_path_name"], "w") as fp:
-            json.dump(export_data, fp, indent=2)
+        return export_data
 
     def callback_file_dialog_import(self, sender, app_data, user_data):
         if os.path.exists(app_data["file_path_name"]):
             import_data = None
             with open(app_data["file_path_name"]) as fp:
                 import_data = json.load(fp)
+                self.import_pipeline(import_data)
+
+    def import_pipeline(self, import_data):
+        if "node_tags" in import_data and "node_links" in import_data:
             for dpg_node_tag in import_data["node_tags"]:
                 node_id, node_name = dpg_node_tag.split(":")
                 node_id = int(node_id)
