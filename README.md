@@ -11,7 +11,7 @@
 ----
 
 [![WeDX](https://img.shields.io/badge/WeDX-0.7.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.7.0)
-[![License](https://img.shields.io/badge/License-GPL-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ## 📌 Key Features
 
