@@ -1,6 +1,6 @@
 # WeDX
 
-![image](docs/assets/images/wedx_0.5.0.png)
+![image](docs/assets/images/wedx_0.7.0.png)
 
 <div align="center">
 
@@ -20,6 +20,11 @@
 - Support Windows, macOS and Linux OS.
 - Import and export node configuration.
 - Asynchronous processing of frame refresh.
+- Controllable by Azure IoT device. (Azure IoT Central, Azure IoT Hub, Azure IoT Hub DPS)
+  - startPipeline
+  - stopPipeline
+  - importPipeline
+  - exportPipeline
 - Three steps in Edge AI pipeline : Source, Process, and Sink.
   - Source nodes
     - USB Camera
@@ -40,6 +45,7 @@
     - Pose Detection
   - Sink nodes
     - Azure IoT Message
+    - Builtin IoT Message
     - Record File
     - MQTT Camera
     - MQTT Message
@@ -107,4 +113,4 @@ A special thank you goes out to the following rockstars.
 
 ## 📌 Licenses
 
-WeDX is available under the GNU GPL v3 license. Licenses of assets, fonts and models are a listed in the appropriate project folders.
+WeDX is available under the GNU AGPL-3.0 license. Licenses of assets, fonts and models are a listed in the appropriate project folders.
