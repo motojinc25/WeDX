@@ -8,7 +8,7 @@ import time
 from azure.iot.device import IoTHubDeviceClient, Message, ProvisioningDeviceClient
 
 
-class AzureIoCentral:
+class AzureIoTCentral:
     device_client = None
 
     def __init__(self):
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Link service
-    service = AzureIoCentral()
+    service = AzureIoTCentral()
     service.connect(
         id_scope=args.id_scope,
         registration_id=args.registration_id,
