@@ -1,6 +1,6 @@
 # WeDX
 
-![image](docs/assets/images/wedx_0.7.0.png)
+![image](docs/assets/images/wedx_0.8.0.png)
 
 <div align="center">
 
@@ -10,7 +10,7 @@
 
 ----
 
-[![WeDX](https://img.shields.io/badge/WeDX-0.7.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.7.0)
+[![WeDX](https://img.shields.io/badge/WeDX-0.8.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.8.0)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ## 📌 Key Features
@@ -20,6 +20,7 @@
 - Support Windows, macOS and Linux OS.
 - Import and export node configuration.
 - Asynchronous processing of frame refresh.
+- Container support for arm64v8 and amd64 architecture without GUI.
 - Controllable by Azure IoT device. (Azure IoT Central, Azure IoT Hub, Azure IoT Hub DPS)
   - startPipeline
   - stopPipeline
