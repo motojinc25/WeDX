@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import logging
 
 import cv2 as cv
 import mediapipe as mp
@@ -15,12 +16,14 @@ class MediaPipeHands:
         model_complexity=0,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
+        logger=logging.getLogger(__name__),
     ):
         self.hands = mp_hands.Hands(
             model_complexity=model_complexity,
             min_detection_confidence=min_detection_confidence,
             min_tracking_confidence=min_tracking_confidence,
         )
+        self.logger = logger
 
     def __call__(self, image):
         message = []

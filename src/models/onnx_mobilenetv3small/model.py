@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import logging
 import os
 
 import cv2 as cv
@@ -1021,6 +1022,7 @@ class MobileNetV3Small:
         ),
         input_shape=(224, 224),
         device="CUDA",
+        logger=logging.getLogger(__name__),
     ):
         providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
         if device == "CPU":
@@ -1031,6 +1033,7 @@ class MobileNetV3Small:
         )
         self.input_shape = input_shape
         self.input_name = self.session.get_inputs()[0].name
+        self.logger = logger
 
     def __call__(self, image):
         message = []

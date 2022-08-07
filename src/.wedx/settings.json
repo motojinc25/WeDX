@@ -6,12 +6,48 @@
   "usb_camera_height": 720,
   "viewport_width": 1280,
   "viewport_height": 720,
-  "viewport_pos": [300, 50],
+  "viewport_pos": [
+    300,
+    50
+  ],
   "node_width": 240,
   "node_height": 135,
   "debugging_width": 640,
   "debugging_height": 360,
   "video_writer_width": 1280,
   "video_writer_height": 720,
-  "video_writer_directory": "./records"
+  "video_writer_directory": "./records",
+  "logger": {
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+      "simple": {
+        "format": "%(asctime)s - %(name)s - [%(levelname)s] - %(message)s"
+      }
+    },
+    "handlers": {
+      "standard_output": {
+        "class": "logging.StreamHandler",
+        "formatter": "simple",
+        "stream": "ext://sys.stdout"
+      }
+    },
+    "loggers": {
+      "gui.studio": {
+        "level": "INFO"
+      },
+      "managers.edge_ai_pipeline": {
+        "level": "INFO"
+      },
+      "managers.user_preferences": {
+        "level": "INFO"
+      }
+    },
+    "root": {
+      "level": "WARNING",
+      "handlers": [
+        "standard_output"
+      ]
+    }
+  }
 }

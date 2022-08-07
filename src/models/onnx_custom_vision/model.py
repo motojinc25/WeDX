@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import logging
 import operator
 import os
 
@@ -14,10 +15,11 @@ IOU_THRESHOLD = 0.45
 
 
 class NonMaxSuppression:
-    def __init__(self, max_detections, prob_threshold, iou_threshold):
+    def __init__(self, max_detections, prob_threshold, iou_threshold, logger=logging.getLogger(__name__)):
         self.max_detections = max_detections
         self.prob_threshold = prob_threshold
         self.iou_threshold = iou_threshold
+        self.logger = logger
 
     def __call__(self, boxes, class_probs):
         classes = np.argmax(class_probs, axis=1)
@@ -73,8 +75,8 @@ class CustomVisionObjectDetection:
     threshold = 0.55
     is_active = False
 
-    def __init__(self):
-        pass
+    def __init__(self, logger=logging.getLogger(__name__)):
+        self.logger = logger
 
     def connect(
         self,
@@ -229,8 +231,8 @@ class CustomVisionObjectDetection:
 class CustomVisionClassification:
     is_active = False
 
-    def __init__(self):
-        pass
+    def __init__(self, logger=logging.getLogger(__name__)):
+        self.logger = logger
 
     def connect(
         self,

@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 import argparse
+import logging
 import os
 
 import cv2 as cv
 
 
 class WeChatQRCode:
-    def __init__(self):
+    def __init__(self, logger=logging.getLogger(__name__)):
+        self.logger = logger
         current_path = os.path.dirname(os.path.abspath(__file__))
         self.detector = cv.wechat_qrcode_WeChatQRCode(
             os.path.abspath(os.path.join(current_path, "detect.prototxt")),

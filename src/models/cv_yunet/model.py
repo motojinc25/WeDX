@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import logging
 import os
 
 import cv2 as cv
@@ -21,6 +22,7 @@ class YuNet:
         top_k=5000,
         backend_id=0,
         target_id=0,
+        logger=logging.getLogger(__name__),
     ):
         self._model_path = model_path
         self._input_size = tuple(input_size)  # [w, h]
@@ -39,6 +41,7 @@ class YuNet:
             backend_id=self._backend_id,
             target_id=self._target_id,
         )
+        self.logger = logger
 
     @property
     def name(self):

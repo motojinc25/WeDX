@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import copy
+import logging
 import os
 
 import cv2 as cv
@@ -19,6 +20,7 @@ class MoveNetMPL:
         ),
         input_shape=(256, 256),
         device="CUDA",
+        logger=logging.getLogger(__name__),
     ):
         providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
         if device == "CPU":
@@ -29,6 +31,7 @@ class MoveNetMPL:
         )
         self.input_shape = input_shape
         self.input_name = self.session.get_inputs()[0].name
+        self.logger = logger
 
     def __call__(self, image):
         image_width, image_height = image.shape[1], image.shape[0]

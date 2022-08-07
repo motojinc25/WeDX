@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import copy
+import logging
 import os
 
 import cv2 as cv
@@ -106,6 +107,7 @@ class YOLOXNano:
         with_p6=False,
         input_shape=(416, 416),
         device="CUDA",
+        logger=logging.getLogger(__name__),
     ):
         providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
         if device == "CPU":
@@ -120,6 +122,7 @@ class YOLOXNano:
         )
         self.input_shape = input_shape
         self.input_name = self.session.get_inputs()[0].name
+        self.logger = logger
 
     def __call__(self, image):
         temp_image = copy.deepcopy(image)

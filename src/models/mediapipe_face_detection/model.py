@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import logging
 
 import cv2 as cv
 import mediapipe as mp
@@ -9,11 +10,17 @@ mp_drawing = mp.solutions.drawing_utils
 
 
 class MediaPipeFaceDetection:
-    def __init__(self, model_selection=0, min_detection_confidence=0.5):
+    def __init__(
+        self,
+        model_selection=0,
+        min_detection_confidence=0.5,
+        logger=logging.getLogger(__name__),
+    ):
         self.face_detection = mp_face_detection.FaceDetection(
             model_selection=model_selection,
             min_detection_confidence=min_detection_confidence,
         )
+        self.logger = logger
 
     def __call__(self, image):
         message = []

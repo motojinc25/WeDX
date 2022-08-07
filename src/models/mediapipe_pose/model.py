@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import logging
 
 import cv2 as cv
 import mediapipe as mp
@@ -10,11 +11,17 @@ mp_drawing_styles = mp.solutions.drawing_styles
 
 
 class MediaPipePose:
-    def __init__(self, min_detection_confidence=0.5, min_tracking_confidence=0.5):
+    def __init__(
+        self,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5,
+        logger=logging.getLogger(__name__),
+    ):
         self.pose = mp_pose.Pose(
             min_detection_confidence=min_detection_confidence,
             min_tracking_confidence=min_tracking_confidence,
         )
+        self.logger = logger
 
     def __call__(self, image):
         message = []
@@ -27,7 +34,7 @@ class MediaPipePose:
                         "x": landmark.x,
                         "y": landmark.y,
                         "z": landmark.z,
-                        "visibility": landmark.visibility
+                        "visibility": landmark.visibility,
                     }
                 )
             message = message_landmark
