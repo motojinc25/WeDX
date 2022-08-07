@@ -1,158 +1,174 @@
+import logging
 import os
 
 import cv2
-import dearpygui.dearpygui as dpg
 
+from gui.constants import Attribute, PinShape
 from nodes.edge_ai_pipeline.base import BaseNode
+
+try:
+    import dearpygui.dearpygui as dpg
+except ImportError:
+    pass
 
 
 class EdgeAINode(BaseNode):
-    def __init__(self, settings):
+    def __init__(self, settings, logger=logging.getLogger(__name__)):
         self.version = "0.1.0"
         self.name = "Video File"
         self.theme_titlebar = [51, 102, 0]
         self.theme_titlebar_selected = [76, 153, 0]
         self.settings = settings
+        self.logger = logger
         self.configs = {}
         self.configs["video_captures"] = {}
         self.configs["video_paths"] = {}
         self.configs["prev_video_paths"] = {}
         self.configs["frame_counts"] = {}
+        self.forms = {}
+        self.forms["loop"] = {}
+        self.forms["skiprate"] = {}
 
     def add_node(self, parent, node_id, pos):
         # Describe node attribute tags
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg_pin_tags = self.get_tag_list(dpg_node_tag)
+        self.forms["loop"][dpg_node_tag] = True
+        self.forms["skiprate"][dpg_node_tag] = 1
 
-        # Add a dynamic texture and a raw texture
-        with dpg.texture_registry(show=False):
-            dpg.add_raw_texture(
-                self.settings["node_width"],
-                self.settings["node_height"],
-                self.get_blank_texture(
-                    self.settings["node_width"], self.settings["node_height"]
-                ),
-                tag=dpg_node_tag + ":texture",
-                format=dpg.mvFormat_Float_rgba,
-            )
-
-        # Add file dialog for video file
-        with dpg.file_dialog(
-            directory_selector=False,
-            show=False,
-            modal=True,
-            height=int(self.settings["node_height"] * 3),
-            default_path=os.path.abspath(
-                os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
-                    "../../../assets/videos/",
+        if self.settings["gui"]:
+            # Add a dynamic texture and a raw texture
+            with dpg.texture_registry(show=False):
+                dpg.add_raw_texture(
+                    self.settings["node_width"],
+                    self.settings["node_height"],
+                    self.get_blank_texture(
+                        self.settings["node_width"], self.settings["node_height"]
+                    ),
+                    tag=dpg_node_tag + ":texture",
+                    format=dpg.mvFormat_Float_rgba,
                 )
-            ),
-            user_data=dpg_node_tag,
-            callback=self.callback_file_dialog,
-            id="file_dialog_video:" + str(node_id),
-        ):
-            dpg.add_file_extension("Movie (*.mp4 *.avi){.mp4,.avi}")
-            dpg.add_file_extension("", color=(150, 255, 150, 255))
 
-        # Add a node to a node editor
-        with dpg.node(
-            tag=dpg_node_tag, parent=parent, label=self.name, pos=pos
-        ) as dpg_node:
-            # Set node color
-            with dpg.theme() as dpg_theme:
-                with dpg.theme_component(dpg.mvNode):
-                    dpg.add_theme_color(
-                        dpg.mvNodeCol_TitleBar,
-                        self.theme_titlebar,
-                        category=dpg.mvThemeCat_Nodes,
+            # Add file dialog for video file
+            with dpg.file_dialog(
+                directory_selector=False,
+                show=False,
+                modal=True,
+                height=int(self.settings["node_height"] * 3),
+                default_path=os.path.abspath(
+                    os.path.join(
+                        os.path.dirname(os.path.abspath(__file__)),
+                        "../../../assets/videos/",
                     )
-                    dpg.add_theme_color(
-                        dpg.mvNodeCol_TitleBarHovered,
-                        self.theme_titlebar_selected,
-                        category=dpg.mvThemeCat_Nodes,
-                    )
-                    dpg.add_theme_color(
-                        dpg.mvNodeCol_TitleBarSelected,
-                        self.theme_titlebar_selected,
-                        category=dpg.mvThemeCat_Nodes,
-                    )
-                    dpg.add_theme_color(
-                        dpg.mvNodeCol_NodeOutline,
-                        self.theme_titlebar,
-                        category=dpg.mvThemeCat_Nodes,
-                    )
-                    dpg.bind_item_theme(dpg_node, dpg_theme)
-
-            # Add pins that allows linking inputs and outputs
-            with dpg.node_attribute(
-                attribute_type=dpg.mvNode_Attr_Output,
-                tag=dpg_pin_tags[self.VIDEO_OUT],
+                ),
+                user_data=dpg_node_tag,
+                callback=self.callback_file_dialog,
+                id="file_dialog_video:" + str(node_id),
             ):
-                dpg.add_text("VIDEO OUT")
-            with dpg.node_attribute(
-                attribute_type=dpg.mvNode_Attr_Output,
-                shape=dpg.mvNode_PinShape_Quad,
-                tag=dpg_pin_tags[self.MESSAGE_OUT],
-            ):
-                dpg.add_text("MESSAGE OUT")
+                dpg.add_file_extension("Movie (*.mp4 *.avi){.mp4,.avi}")
+                dpg.add_file_extension("", color=(150, 255, 150, 255))
 
-            # Add a file dialog
-            with dpg.node_attribute(
-                attribute_type=dpg.mvNode_Attr_Static,
-            ):
-                dpg.add_spacer(height=5)
-                with dpg.group(horizontal=True):
-                    dpg.add_button(
-                        label="1",
-                        tag=dpg_node_tag + ":video_file:0",
-                        width=self.settings["node_width"] * 0.075,
-                        user_data=dpg_node_tag + ":video_file:0",
-                        callback=self.callback_show_video,
-                    )
-                    dpg.add_button(
-                        label="2",
-                        tag=dpg_node_tag + ":video_file:1",
-                        width=self.settings["node_width"] * 0.075,
-                        user_data=dpg_node_tag + ":video_file:1",
-                        callback=self.callback_show_video,
-                    )
-                    dpg.add_button(
-                        label="3",
-                        tag=dpg_node_tag + ":video_file:2",
-                        width=self.settings["node_width"] * 0.075,
-                        user_data=dpg_node_tag + ":video_file:2",
-                        callback=self.callback_show_video,
-                    )
-                    dpg.add_button(
-                        label="Select Video File",
-                        width=self.settings["node_width"] * 0.65,
-                        callback=lambda: dpg.show_item(
-                            "file_dialog_video:" + str(node_id)
-                        ),
-                    )
+            # Add a node to a node editor
+            with dpg.node(
+                tag=dpg_node_tag, parent=parent, label=self.name, pos=pos
+            ) as dpg_node:
+                # Set node color
+                with dpg.theme() as dpg_theme:
+                    with dpg.theme_component(dpg.mvNode):
+                        dpg.add_theme_color(
+                            dpg.mvNodeCol_TitleBar,
+                            self.theme_titlebar,
+                            category=dpg.mvThemeCat_Nodes,
+                        )
+                        dpg.add_theme_color(
+                            dpg.mvNodeCol_TitleBarHovered,
+                            self.theme_titlebar_selected,
+                            category=dpg.mvThemeCat_Nodes,
+                        )
+                        dpg.add_theme_color(
+                            dpg.mvNodeCol_TitleBarSelected,
+                            self.theme_titlebar_selected,
+                            category=dpg.mvThemeCat_Nodes,
+                        )
+                        dpg.add_theme_color(
+                            dpg.mvNodeCol_NodeOutline,
+                            self.theme_titlebar,
+                            category=dpg.mvThemeCat_Nodes,
+                        )
+                        dpg.bind_item_theme(dpg_node, dpg_theme)
 
-            # Add a checkbox for video loop and Add slider for skip rate
-            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
-                with dpg.group(horizontal=True):
-                    dpg.add_checkbox(
-                        label="Loop",
-                        tag=dpg_node_tag + ":loop",
-                        user_data=dpg_node_tag,
-                        default_value=True,
-                    )
-                    dpg.add_slider_int(
-                        tag=dpg_node_tag + ":skiprate",
-                        label="SkipRate",
-                        width=int(self.settings["node_width"] / 2),
-                        default_value=1,
-                        min_value=1,
-                        max_value=10,
-                    )
+                # Add pins that allows linking inputs and outputs
+                with dpg.node_attribute(
+                    attribute_type=int(Attribute.OUTPUT),
+                    tag=dpg_pin_tags[self.VIDEO_OUT],
+                ):
+                    dpg.add_text("VIDEO OUT")
+                with dpg.node_attribute(
+                    attribute_type=int(Attribute.OUTPUT),
+                    shape=int(PinShape.QUAD),
+                    tag=dpg_pin_tags[self.MESSAGE_OUT],
+                ):
+                    dpg.add_text("MESSAGE OUT")
 
-            # Add an image from a specified texture
-            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
-                dpg.add_image(dpg_node_tag + ":texture")
+                # Add a file dialog
+                with dpg.node_attribute(
+                    attribute_type=int(Attribute.STATIC),
+                ):
+                    dpg.add_spacer(height=5)
+                    with dpg.group(horizontal=True):
+                        dpg.add_button(
+                            label="1",
+                            tag=dpg_node_tag + ":video_file:0",
+                            width=self.settings["node_width"] * 0.075,
+                            user_data=dpg_node_tag + ":video_file:0",
+                            callback=self.callback_show_video,
+                        )
+                        dpg.add_button(
+                            label="2",
+                            tag=dpg_node_tag + ":video_file:1",
+                            width=self.settings["node_width"] * 0.075,
+                            user_data=dpg_node_tag + ":video_file:1",
+                            callback=self.callback_show_video,
+                        )
+                        dpg.add_button(
+                            label="3",
+                            tag=dpg_node_tag + ":video_file:2",
+                            width=self.settings["node_width"] * 0.075,
+                            user_data=dpg_node_tag + ":video_file:2",
+                            callback=self.callback_show_video,
+                        )
+                        dpg.add_button(
+                            label="Select Video File",
+                            width=self.settings["node_width"] * 0.65,
+                            callback=lambda: dpg.show_item(
+                                "file_dialog_video:" + str(node_id)
+                            ),
+                        )
+
+                # Add a checkbox for video loop and Add slider for skip rate
+                with dpg.node_attribute(attribute_type=int(Attribute.STATIC)):
+                    with dpg.group(horizontal=True):
+                        dpg.add_checkbox(
+                            label="Loop",
+                            default_value=self.forms["loop"][dpg_node_tag],
+                            callback=self.callback_change_loop,
+                            user_data=dpg_node_tag,
+                            tag=dpg_node_tag + ":loop",
+                        )
+                        dpg.add_slider_int(
+                            label="SkipRate",
+                            width=int(self.settings["node_width"] / 2),
+                            default_value=self.forms["skiprate"][dpg_node_tag],
+                            min_value=1,
+                            max_value=10,
+                            callback=self.callback_change_skiprate,
+                            user_data=dpg_node_tag,
+                            tag=dpg_node_tag + ":skiprate",
+                        )
+
+                # Add an image from a specified texture
+                with dpg.node_attribute(attribute_type=int(Attribute.STATIC)):
+                    dpg.add_image(dpg_node_tag + ":texture")
 
         # Return Dear PyGui Tag
         return dpg_node_tag
@@ -175,8 +191,8 @@ class EdgeAINode(BaseNode):
             self.configs["video_captures"][dpg_node_tag] = cv2.VideoCapture(movie_path)
             self.configs["prev_video_paths"][dpg_node_tag] = movie_path
             self.configs["frame_counts"][dpg_node_tag] = 0
-        loop_flag = dpg.get_value(dpg_node_tag + ":loop")
-        skip_rate = int(dpg.get_value(dpg_node_tag + ":skiprate"))
+        loop_flag = self.forms["loop"][dpg_node_tag]
+        skip_rate = int(self.forms["skiprate"][dpg_node_tag])
 
         # capturing from Video file
         if dpg_node_tag in self.configs["video_captures"]:
@@ -203,8 +219,9 @@ class EdgeAINode(BaseNode):
                 texture = self.get_image_texture(
                     frame, self.settings["node_width"], self.settings["node_height"]
                 )
-                if dpg.does_item_exist(dpg_node_tag + ":texture"):
-                    dpg.set_value(dpg_node_tag + ":texture", texture)
+                if self.settings["gui"]:
+                    if dpg.does_item_exist(dpg_node_tag + ":texture"):
+                        dpg.set_value(dpg_node_tag + ":texture", texture)
 
                 # Generate message
                 message = [
@@ -235,38 +252,41 @@ class EdgeAINode(BaseNode):
             del self.configs["prev_video_paths"][dpg_node_tag]
         if dpg_node_tag in self.configs["video_paths"]:
             del self.configs["video_paths"][dpg_node_tag]
-        dpg.delete_item(dpg_node_tag + ":texture")
-        dpg.delete_item("file_dialog_video:" + str(node_id))
-        dpg.delete_item(dpg_node_tag)
+        if self.settings["gui"]:
+            dpg.delete_item(dpg_node_tag + ":texture")
+            dpg.delete_item("file_dialog_video:" + str(node_id))
+            dpg.delete_item(dpg_node_tag)
 
     def get_export_params(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         params = {}
-        params["version"] = self.version
-        params["position"] = dpg.get_item_pos(dpg_node_tag)
-        params["loop"] = (
-            dpg.get_value(dpg_node_tag + ":loop")
-            if dpg.does_item_exist(dpg_node_tag + ":loop")
-            else None
-        )
-        params["skiprate"] = int(
-            dpg.get_value(dpg_node_tag + ":skiprate")
-            if dpg.does_item_exist(dpg_node_tag + ":skiprate")
-            else None
-        )
-        params["video_filepath"] = ""
-        if dpg_node_tag in self.configs["video_paths"]:
-            params["video_filepath"] = self.configs["video_paths"][dpg_node_tag]
+        if self.settings["gui"]:
+            params["version"] = self.version
+            params["position"] = dpg.get_item_pos(dpg_node_tag)
+            params["loop"] = (
+                dpg.get_value(dpg_node_tag + ":loop")
+                if dpg.does_item_exist(dpg_node_tag + ":loop")
+                else None
+            )
+            params["skiprate"] = int(
+                dpg.get_value(dpg_node_tag + ":skiprate")
+                if dpg.does_item_exist(dpg_node_tag + ":skiprate")
+                else None
+            )
+            params["video_filepath"] = ""
+            if dpg_node_tag in self.configs["video_paths"]:
+                params["video_filepath"] = self.configs["video_paths"][dpg_node_tag]
         return params
 
     def set_import_params(self, node_id, params):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        if "loop" in params:
-            dpg.set_value(dpg_node_tag + ":loop", params["loop"])
-        if "skiprate" in params:
-            dpg.set_value(dpg_node_tag + ":skiprate", params["skiprate"])
-        if "video_filepath" in params and os.path.exists(params["video_filepath"]):
-            self.configs["video_paths"][dpg_node_tag] = params["video_filepath"]
+        if self.settings["gui"]:
+            if "loop" in params:
+                dpg.set_value(dpg_node_tag + ":loop", params["loop"])
+            if "skiprate" in params:
+                dpg.set_value(dpg_node_tag + ":skiprate", params["skiprate"])
+            if "video_filepath" in params and os.path.exists(params["video_filepath"]):
+                self.configs["video_paths"][dpg_node_tag] = params["video_filepath"]
 
     def callback_file_dialog(self, sender, app_data, user_data):
         dpg_node_tag = user_data
@@ -289,3 +309,11 @@ class EdgeAINode(BaseNode):
             )
         )
         self.configs["video_paths"][dpg_node_tag] = filePath
+
+    def callback_change_loop(self, sender, data, user_data):
+        dpg_node_tag = user_data
+        self.forms["loop"][dpg_node_tag] = data
+
+    def callback_change_skiprate(self, sender, data, user_data):
+        dpg_node_tag = user_data
+        self.forms["skiprate"][dpg_node_tag] = data

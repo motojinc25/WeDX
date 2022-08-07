@@ -2,8 +2,9 @@ import array
 from abc import ABCMeta, abstractmethod
 
 import cv2
-import dearpygui.dearpygui as dpg
 import numpy as np
+
+from gui.constants import Attribute, PinShape
 
 
 class BaseNode(metaclass=ABCMeta):
@@ -12,6 +13,7 @@ class BaseNode(metaclass=ABCMeta):
     theme_titlebar = [102, 51, 0]
     theme_titlebar_selected = [153, 76, 0]
     settings = None  # WeDX settings
+    logger = None  # Application Logging
     configs = None  # Each node configuration
 
     # Video and Message position constants
@@ -75,8 +77,8 @@ class BaseNode(metaclass=ABCMeta):
             ":".join(
                 [
                     node_tag,
-                    str(dpg.mvNode_PinShape_CircleFilled),
-                    str(dpg.mvNode_Attr_Input),
+                    str(int(PinShape.CIRCLE_FILLED)),
+                    str(int(Attribute.INPUT)),
                 ]
             )
         )
@@ -84,8 +86,8 @@ class BaseNode(metaclass=ABCMeta):
             ":".join(
                 [
                     node_tag,
-                    str(dpg.mvNode_PinShape_CircleFilled),
-                    str(dpg.mvNode_Attr_Output),
+                    str(int(PinShape.CIRCLE_FILLED)),
+                    str(int(Attribute.OUTPUT)),
                 ]
             )
         )
@@ -93,8 +95,8 @@ class BaseNode(metaclass=ABCMeta):
             ":".join(
                 [
                     node_tag,
-                    str(dpg.mvNode_PinShape_Quad),
-                    str(dpg.mvNode_Attr_Input),
+                    str(int(PinShape.QUAD)),
+                    str(int(Attribute.INPUT)),
                 ]
             )
         )
@@ -102,8 +104,8 @@ class BaseNode(metaclass=ABCMeta):
             ":".join(
                 [
                     node_tag,
-                    str(dpg.mvNode_PinShape_Quad),
-                    str(dpg.mvNode_Attr_Output),
+                    str(int(PinShape.QUAD)),
+                    str(int(Attribute.OUTPUT)),
                 ]
             )
         )

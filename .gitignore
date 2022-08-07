@@ -166,7 +166,7 @@ cython_debug/
 records/
 
 # User settings on WeDX
-src/.wedx/user.json
+src/.wedx/preferences.json
 
 # Pipelines on WeDX
 src/.wedx/*.wedx
