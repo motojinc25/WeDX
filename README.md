@@ -1,6 +1,6 @@
 # WeDX
 
-![image](docs/assets/images/wedx_0.8.0.png)
+![image](docs/assets/images/wedx_0.9.0.png)
 
 <div align="center">
 
@@ -10,7 +10,7 @@
 
 ----
 
-[![WeDX](https://img.shields.io/badge/WeDX-0.8.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.8.0)
+[![WeDX](https://img.shields.io/badge/WeDX-0.9.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.9.0)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ## 📌 Key Features
@@ -26,6 +26,11 @@
   - stopPipeline
   - importPipeline
   - exportPipeline
+- Controllable by Web API. (http://localhost:1211)
+  - startpipeline[POST]
+  - stoppipeline[POST]
+  - importpipeline[POST]
+  - exportpipeline[POST]
 - Three steps in Edge AI pipeline : Source, Process, and Sink.
   - Source nodes
     - USB Camera
