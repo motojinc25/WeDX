@@ -91,13 +91,27 @@ class EdgeAINode(BaseNode):
                     attribute_type=int(Attribute.OUTPUT),
                     tag=dpg_pin_tags[self.VIDEO_OUT],
                 ):
-                    dpg.add_text("VIDEO OUT")
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("VIDEO OUT")
+                        dpg.add_spacer(width=self.settings["node_width"] - 100)
+                        dpg.add_checkbox(
+                            label="",
+                            tag=dpg_node_tag + ":video_out",
+                            default_value=True,
+                        )
                 with dpg.node_attribute(
                     attribute_type=int(Attribute.OUTPUT),
                     shape=int(PinShape.QUAD),
                     tag=dpg_pin_tags[self.MESSAGE_OUT],
                 ):
-                    dpg.add_text("MESSAGE OUT")
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("MESSAGE OUT")
+                        dpg.add_spacer(width=self.settings["node_width"] - 120)
+                        dpg.add_checkbox(
+                            label="",
+                            tag=dpg_node_tag + ":message_out",
+                            default_value=True,
+                        )
 
                 # Add a combo dropdown that allows selecting model
                 with dpg.node_attribute(attribute_type=int(Attribute.STATIC)):
@@ -161,6 +175,13 @@ class EdgeAINode(BaseNode):
                     "inference": inference_message,
                 }
             )
+
+        # Control output
+        if self.settings["gui"]:
+            if not dpg.get_value(dpg_node_tag + ":message_out"):
+                message = None
+            if not dpg.get_value(dpg_node_tag + ":video_out"):
+                frame = None
 
         # Return frame and message
         return frame, message
