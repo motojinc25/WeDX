@@ -7,6 +7,7 @@ import graphlib
 import json
 import logging
 import logging.config
+import multiprocessing
 import os
 import sys
 import time
@@ -15,8 +16,10 @@ import cv2
 
 from gui.constants import tag
 from gui.studio import WeDXStudio
+from links.mq_req_rep.link import MessageQueueReqRep
 from managers.edge_ai_pipeline import EdgeAIPipeline
 from managers.user_preferences import UserPreferences
+from servers.api import run_api
 
 
 async def refresh_frame(edge_ai_pipeline, dpg_node_tag, node_frames, node_messages):
@@ -34,6 +37,7 @@ async def refresh_frame(edge_ai_pipeline, dpg_node_tag, node_frames, node_messag
     )
     node_frames[dpg_node_tag] = frame
     node_messages[dpg_node_tag] = message
+    await asyncio.sleep(0)
 
 
 async def main():
@@ -73,6 +77,13 @@ async def main():
     if args.no_gui:
         settings["gui"] = False
 
+    # Start Processes
+    proc = {}
+    proc["api"] = multiprocessing.Process(
+        target=run_api, kwargs={"host": "0.0.0.0", "port": 1211, "threaded": True}
+    )
+    proc["api"].start()
+
     # Create Dear PyGui Context
     wedx = WeDXStudio(settings=settings)
     wedx.create_context()
@@ -86,6 +97,10 @@ async def main():
     # Init Manager Windows
     edge_ai_pipeline = EdgeAIPipeline(settings)
     user_preferences = UserPreferences(settings, edge_ai_pipeline)
+
+    # Create Message Queue
+    settings["mq"] = MessageQueueReqRep()
+    asyncio.create_task(settings["mq"].server(edge_ai_pipeline))
 
     # Create Viewport Menu Bar
     wedx.viewport_menu_bar()
@@ -111,6 +126,7 @@ async def main():
     prev_frame_time = 0
     new_frame_time = 0
     while wedx.is_dearpygui_running():
+        await asyncio.sleep(0)
         new_frame_time = time.time()
         time_elapsed = new_frame_time - prev_frame_time
         if time_elapsed > 1.0 / settings["fps"]:
@@ -155,6 +171,9 @@ async def main():
 
     # Finally, shut down the client
     user_preferences.close()
+
+    # Terminate Processes
+    proc["api"].terminate()
 
 
 if __name__ == "__main__":

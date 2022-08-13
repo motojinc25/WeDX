@@ -36,6 +36,9 @@
       "gui.studio": {
         "level": "INFO"
       },
+      "links.message_req_rep.link": {
+        "level": "INFO"
+      },
       "managers.edge_ai_pipeline": {
         "level": "INFO"
       },

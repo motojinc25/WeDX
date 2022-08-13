@@ -20,5 +20,8 @@ COPY ./requirements/docker_arm64v8.txt ./requirements.txt
 RUN python3 -m pip install -r requirements.txt
 
 COPY ../../src/ ./
+COPY ../../LICENSE .
+
+EXPOSE 1211
 
 CMD ["python3", "main.py", "--no_gui"]
