@@ -24,6 +24,7 @@ class UserPreferences:
     links = {}
     iot_device_instance = None
     settings_filepath = None
+    logging_level = None
 
     def __init__(self, settings, edge_ai_pipeline, logger=logging.getLogger(__name__)):
         self.settings = settings
@@ -58,6 +59,9 @@ class UserPreferences:
                     "autoconnect": True,
                 }
             }
+
+        # Logging Level
+        self.logging_level = self.settings["logger"]["root"]["level"]
 
     def create_gui_widgets(self):
         # Describe default values
@@ -208,6 +212,36 @@ class UserPreferences:
                         callback=lambda: dpg.configure_item(
                             tag["window"]["iot_device_setting"], show=False
                         ),
+                    )
+
+            # Add an Logging Levels Setting window
+            with dpg.window(
+                tag=tag["window"]["logging_level_setting"],
+                label="Logging Level",
+                min_size=(width, 150),
+                show=False,
+                pos=(100, 100),
+            ):
+                dpg.add_spacer(height=15)
+                dpg.add_radio_button(
+                    items=("CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"),
+                    horizontal=True,
+                    default_value=self.logging_level,
+                    tag=tag["window"]["logging_level_setting"] + ":radio_button",
+                )
+                dpg.add_spacer(height=30)
+                with dpg.group(horizontal=True):
+                    dpg.add_button(
+                        label="OK",
+                        width=340,
+                        callback=self.callback_button_set_logging_level,
+                        tag=tag["window"]["logging_level_setting"] + ":ok",
+                    )
+                    dpg.add_button(
+                        label="Cancel",
+                        width=100,
+                        callback=self.callback_button_cancel_logging_level,
+                        tag=tag["window"]["logging_level_setting"] + ":cancel",
                     )
 
             # Connect IoT service
@@ -439,6 +473,22 @@ class UserPreferences:
 
         # Update link status
         self.edge_ai_pipeline.change_toolbar_link()
+
+    def callback_button_set_logging_level(self, sender, data, user_data):
+        self.logging_level = dpg.get_value(
+            tag["window"]["logging_level_setting"] + ":radio_button"
+        )
+        self.settings["logger"]["root"]["level"] = self.logging_level
+
+        # Set Logger
+        logging.config.dictConfig(self.settings["logger"])
+        dpg.configure_item(tag["window"]["logging_level_setting"], show=False)
+
+    def callback_button_cancel_logging_level(self, sender, data, user_data):
+        dpg.set_value(
+            tag["window"]["logging_level_setting"] + ":radio_button", self.logging_level
+        )
+        dpg.configure_item(tag["window"]["logging_level_setting"], show=False)
 
     # Define a handler to request method
     def method_request_handler(self, method_request):

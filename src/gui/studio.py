@@ -147,6 +147,12 @@ class WeDXStudio:
                             tag["window"]["iot_device_setting"], show=True
                         ),
                     )
+                    dpg.add_menu_item(
+                        label="Logging Level",
+                        callback=lambda: dpg.configure_item(
+                            tag["window"]["logging_level_setting"], show=True
+                        ),
+                    )
 
                 with dpg.menu(label="Help"):
                     dpg.add_menu_item(
