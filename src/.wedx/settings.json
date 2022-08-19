@@ -17,6 +17,10 @@
   "video_writer_width": 1280,
   "video_writer_height": 720,
   "video_writer_directory": "./records",
+  "webapi_port": 1211,
+  "webapp_port": 1212,
+  "video_streaming_width": 1280,
+  "video_streaming_height": 720,
   "logger": {
     "version": 1,
     "disable_existing_loggers": false,

@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import platform
+import webbrowser
 from collections import OrderedDict
 from glob import glob
 from importlib import import_module
@@ -106,6 +107,22 @@ class EdgeAIPipeline:
                     os.path.join(icon_path, "inactive_link.png")
                 )
                 dpg.add_static_texture(w, h, data, tag="texture:inactive_link")
+                w, h, _, data = dpg.load_image(
+                    os.path.join(icon_path, "active_webapi.png")
+                )
+                dpg.add_static_texture(w, h, data, tag="texture:active_webapi")
+                w, h, _, data = dpg.load_image(
+                    os.path.join(icon_path, "inactive_webapi.png")
+                )
+                dpg.add_static_texture(w, h, data, tag="texture:inactive_webapi")
+                w, h, _, data = dpg.load_image(
+                    os.path.join(icon_path, "active_webapp.png")
+                )
+                dpg.add_static_texture(w, h, data, tag="texture:active_webapp")
+                w, h, _, data = dpg.load_image(
+                    os.path.join(icon_path, "inactive_webapp.png")
+                )
+                dpg.add_static_texture(w, h, data, tag="texture:inactive_webapp")
 
             # Toolbar
             with dpg.group(horizontal=True, horizontal_spacing=3, parent=parent):
@@ -143,6 +160,20 @@ class EdgeAIPipeline:
                         "iot_device_setting_window", show=True
                     ),
                     tag="toolbar:link",
+                )
+                dpg.add_image_button(
+                    "texture:active_webapi"
+                    if self.settings["webapi"]
+                    else "texture:inactive_webapi",
+                    callback=self.callback_open_webapi,
+                    tag="toolbar:webapi",
+                )
+                dpg.add_image_button(
+                    "texture:active_webapp"
+                    if self.settings["webapp"]
+                    else "texture:inactive_webapp",
+                    callback=self.callback_open_webapp,
+                    tag="toolbar:webapp",
                 )
 
             # Export File Dialog
@@ -515,3 +546,11 @@ class EdgeAIPipeline:
             dpg.configure_item("toolbar:link", texture_tag="texture:active_link")
         else:
             dpg.configure_item("toolbar:link", texture_tag="texture:inactive_link")
+
+    def callback_open_webapi(self, sender, app_data, user_data):
+        if self.settings["webapi"]:
+            webbrowser.open("http://localhost:" + str(self.settings["webapi_port"]))
+
+    def callback_open_webapp(self, sender, app_data, user_data):
+        if self.settings["webapp"]:
+            webbrowser.open("http://localhost:" + str(self.settings["webapp_port"]))

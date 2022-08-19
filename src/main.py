@@ -8,18 +8,21 @@ import json
 import logging
 import logging.config
 import multiprocessing
+import multiprocessing.shared_memory as shared_memory
 import os
+import subprocess
 import sys
 import time
 
 import cv2
+import numpy as np
 
 from gui.constants import tag
 from gui.studio import WeDXStudio
 from links.mq_req_rep.link import MessageQueueReqRep
 from managers.edge_ai_pipeline import EdgeAIPipeline
 from managers.user_preferences import UserPreferences
-from servers.api import run_api
+from servers.webapi import run_api
 
 
 async def refresh_frame(edge_ai_pipeline, dpg_node_tag, node_frames, node_messages):
@@ -46,6 +49,8 @@ async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--skip_detect_cameras", action="store_true")
     parser.add_argument("--no_gui", action="store_true")
+    parser.add_argument("--no_webapi", action="store_true")
+    parser.add_argument("--no_webapp", action="store_true")
     args = parser.parse_args()
 
     # Set window settings
@@ -74,15 +79,57 @@ async def main():
     settings["device_no_list"] = valid_usb_cameras
     settings["camera_capture_list"] = caps
     settings["gui"] = True
+    settings["webapi"] = True
+    settings["webapp"] = True
     if args.no_gui:
         settings["gui"] = False
+    if args.no_webapi:
+        settings["webapi"] = False
+    if args.no_webapp:
+        settings["webapp"] = False
+    shm_shape = np.zeros(
+        (settings["video_streaming_height"], settings["video_streaming_width"], 3)
+    ).astype(np.uint8)
+    created_shm = shared_memory.SharedMemory(
+        create=True, size=shm_shape.nbytes, name="wedx_shm"
+    )
+    settings["shm"] = np.ndarray(
+        shm_shape.shape, dtype=np.uint8, buffer=created_shm.buf
+    )
+    settings["shm"][:] = 1
 
     # Start Processes
     proc = {}
-    proc["api"] = multiprocessing.Process(
-        target=run_api, kwargs={"host": "0.0.0.0", "port": 1211, "threaded": True}
-    )
-    proc["api"].start()
+    if settings["webapi"]:
+        proc["webapi"] = multiprocessing.Process(
+            target=run_api,
+            args=(
+                (
+                    settings["video_streaming_width"],
+                    settings["video_streaming_height"],
+                )
+            ),
+            kwargs={"host": "0.0.0.0", "port": settings["webapi_port"]},
+        )
+        proc["webapi"].start()
+    if settings["webapp"]:
+        proc["webapp"] = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "streamlit",
+                "run",
+                "servers/webapp.py",
+                "--browser.gatherUsageStats=false",
+                "--server.runOnSave=true",
+                "--server.headless=true",
+                "--server.port",
+                str(settings["webapp_port"]),
+            ],
+            cwd=current_path,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        )
 
     # Create Dear PyGui Context
     wedx = WeDXStudio(settings=settings)
@@ -173,7 +220,13 @@ async def main():
     user_preferences.close()
 
     # Terminate Processes
-    proc["api"].terminate()
+    if settings["webapi"]:
+        proc["webapi"].terminate()
+    if settings["webapp"]:
+        proc["webapp"].terminate()
+
+    # Release shared memory
+    created_shm.unlink()
 
 
 if __name__ == "__main__":
