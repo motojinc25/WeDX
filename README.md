@@ -1,6 +1,6 @@
 # WeDX
 
-![image](docs/assets/images/wedx_0.9.0.png)
+![image](docs/assets/images/wedx_0.10.0.png)
 
 <div align="center">
 
@@ -10,7 +10,7 @@
 
 ----
 
-[![WeDX](https://img.shields.io/badge/WeDX-0.9.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.9.0)
+[![WeDX](https://img.shields.io/badge/WeDX-0.10.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.10.0)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ## 📌 Key Features
@@ -26,11 +26,13 @@
   - stopPipeline
   - importPipeline
   - exportPipeline
-- Controllable by Web API. (http://localhost:1211)
+- Controllable by Web API using [Flask](https://flask.palletsprojects.com/). (http://localhost:1211)
   - startpipeline[POST]
   - stoppipeline[POST]
   - importpipeline[POST]
   - exportpipeline[POST]
+- Integrated [Streamlit](https://streamlit.io/) for Web App.  (http://localhost:1212)
+- Controllable Logging Level.
 - Three steps in Edge AI pipeline : Source, Process, and Sink.
   - Source nodes
     - USB Camera
@@ -55,6 +57,9 @@
     - Record File
     - MQTT Camera
     - MQTT Message
+    - Video Streaming
+      - Web App with [Flask](https://flask.palletsprojects.com/)
+      - Web App with [Streamlit](https://streamlit.io/)
   - Debugging nodes (Option)
     - Message Screen
     - Video Screen
@@ -72,10 +77,10 @@
 C:\> git clone https://github.com/motojinc25/WeDX
 C:\> cd WeDX
 C:\> python -m venv .venv
-C:\> .venv\Scripts\activate.bat
+C:\> .\.venv\Scripts\activate.bat
 C:\> python -m pip install --upgrade pip
-C:\> python -m pip install -r requirements/win_amd64.txt
-C:\> python src/main.py
+C:\> python -m pip install -r .\requirements\win_amd64.txt
+C:\> python .\src\main.py
 ```
 
 ### macOS(x86_64)
@@ -106,6 +111,20 @@ $ source .venv/bin/activate
 $ pip3 install --upgrade pip
 $ pip3 install -r requirements/manylinux_x86_64.txt
 $ python3 src/main.py
+```
+
+
+## 📌 Usage
+
+### Optional Arguments
+
+```bash
+python3 src/main.py [Arguments]
+
+--skip_detect_cameras : Skip camera recognition logic.
+--no_gui : Running WeDX without GUI.
+--no_webapi : Running WeDX without launching Web API.
+--no_webapp : Running WeDX without launching Web App.
 ```
 
 
