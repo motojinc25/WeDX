@@ -273,7 +273,7 @@ class EdgeAINode(BaseNode):
         if self.settings["gui"]:
             params["version"] = self.version
             params["position"] = dpg.get_item_pos(dpg_node_tag)
-            params["link"] = self.forms["model"][dpg_node_tag]
+            params["link"] = self.forms["link"][dpg_node_tag]
             if params["link"] == "Prediction API":
                 params["url"] = self.forms["url"][dpg_node_tag]
                 params["key"] = self.forms["key"][dpg_node_tag]
