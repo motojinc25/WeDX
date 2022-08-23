@@ -1,6 +1,6 @@
 # WeDX
 
-![image](docs/assets/images/wedx_0.10.0.png)
+![image](docs/assets/images/wedx_0.10.0.gif)
 
 <div align="center">
 
