@@ -1,5 +1,8 @@
 # WeDX
 
+[WeDX](https://github.com/motojinc25/WeDX/) is an open-source utility toolkit that defines a pipeline by expressing the flow of data (video and message) with three types of nodes and lines: source, processor, and sink, in order to quickly realize Edge AI. Pipeline handling can be operated by integrating with [Azure IoT](https://azure.microsoft.com/en-us/solutions/iot/) (Azure IoT Hub, Azure IoT Hub DPS, Azure IoT Central) other than locally, so it can be used as a [PoC](https://en.wikipedia.org/wiki/Proof_of_concept) for business scenarios. Recently, we have also integrated [Flask](https://flask.palletsprojects.com/) and [Streamlit](https://streamlit.io/) to work with web apps.
+It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without GUI.
+
 ![image](docs/assets/images/wedx_0.10.0.gif)
 
 <div align="center">
@@ -12,6 +15,7 @@
 
 [![WeDX](https://img.shields.io/badge/WeDX-0.10.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.10.0)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
+
 
 ## 📌 Key Features
 
