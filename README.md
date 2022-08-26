@@ -1,7 +1,12 @@
 # WeDX
 
-[WeDX](https://github.com/motojinc25/WeDX/) is an open-source utility toolkit that defines a pipeline by expressing the flow of data (video and message) with three types of nodes and lines: source, processor, and sink, in order to quickly realize Edge AI. Pipeline handling can be operated by integrating with [Azure IoT](https://azure.microsoft.com/en-us/solutions/iot/) (Azure IoT Hub, Azure IoT Hub DPS, Azure IoT Central) other than locally, so it can be used as a [PoC](https://en.wikipedia.org/wiki/Proof_of_concept) for business scenarios. Recently, we have also integrated [Flask](https://flask.palletsprojects.com/) and [Streamlit](https://streamlit.io/) to work with web apps.
+[WeDX](https://github.com/motojinc25/WeDX/) is an open-source utility built with [Python](https://www.python.org/) and [Dear PyGui](https://github.com/hoffstadt/DearPyGui). The app provides a platform for building intelligent video applications with the capability to capture, record, and analyze videos. After that, you can publish the video and insights from video to your local computer or the cloud. You can define a pipeline(flow) with no-code while checking in real-time so that you can combine the three types of nodes (source, processor, and sink) in the node editor, infer the video source with the AI model, and provide the result to the service or application. 
+
+Pipeline handling can be operated by integrating with [Azure IoT](https://azure.microsoft.com/en-us/solutions/iot/) (Azure IoT Hub, Azure IoT Hub DPS, Azure IoT Central, Azure IoT Edge, Azure Percept) other than locally, so it can be used as a [PoC](https://en.wikipedia.org/wiki/Proof_of_concept) for business scenarios. Recently, we have also integrated [Flask](https://flask.palletsprojects.com/) and [Streamlit](https://streamlit.io/) to work with web apps.
+
 It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without GUI.
+
+[WeDX](https://github.com/motojinc25/WeDX/) was featured on [Dear PyGui's Showcase](https://github.com/hoffstadt/DearPyGui/wiki/Dear-PyGui-Showcase#wedx) page.
 
 ![image](docs/assets/images/wedx_0.10.0.gif)
 
