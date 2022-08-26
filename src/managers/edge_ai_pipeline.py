@@ -542,7 +542,7 @@ class EdgeAIPipeline:
             dpg.configure_item("toolbar:stop", texture_tag="texture:inactive_stop")
 
     def change_toolbar_link(self):
-        if "iot_device_instance" in self.settings:
+        if "iot_device_client" in self.settings:
             dpg.configure_item("toolbar:link", texture_tag="texture:active_link")
         else:
             dpg.configure_item("toolbar:link", texture_tag="texture:inactive_link")

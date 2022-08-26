@@ -23,5 +23,6 @@ COPY ../../src/ ./
 COPY ../../LICENSE .
 
 EXPOSE 1211
+EXPOSE 1212
 
 CMD ["python3", "main.py", "--no_gui"]

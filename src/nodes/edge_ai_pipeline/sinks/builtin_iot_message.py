@@ -120,8 +120,12 @@ class EdgeAINode(BaseNode):
         # Publish message
         if message is not None:
             if self.forms["connect"][dpg_node_tag] == self.configs["label_connected"]:
-                if "iot_device_instance" in self.settings:
-                    self.settings["iot_device_instance"].send_message(message)
+                if self.settings["iotedge"]:
+                    if "iot_edge_module_client" in self.settings:
+                        self.settings["iot_edge_module_client"].send_message(message)
+                else:
+                    if "iot_device_client" in self.settings:
+                        self.settings["iot_device_client"].send_message(message)
 
         # Update connect status
         self.update_connect_status(node_id)
@@ -151,18 +155,32 @@ class EdgeAINode(BaseNode):
 
     def update_connect_status(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        if "iot_device_instance" in self.settings:
-            self.forms["connect"][dpg_node_tag] = self.configs["label_connected"]
-            if self.settings["gui"]:
-                dpg.set_item_label(
-                    dpg_node_tag + ":connect", self.configs["label_connected"]
-                )
+        if self.settings["iotedge"]:
+            if "iot_edge_module_client" in self.settings:
+                self.forms["connect"][dpg_node_tag] = self.configs["label_connected"]
+                if self.settings["gui"]:
+                    dpg.set_item_label(
+                        dpg_node_tag + ":connect", self.configs["label_connected"]
+                    )
+            else:
+                self.forms["connect"][dpg_node_tag] = self.configs["label_connect"]
+                if self.settings["gui"]:
+                    dpg.set_item_label(
+                        dpg_node_tag + ":connect", self.configs["label_connect"]
+                    )
         else:
-            self.forms["connect"][dpg_node_tag] = self.configs["label_connect"]
-            if self.settings["gui"]:
-                dpg.set_item_label(
-                    dpg_node_tag + ":connect", self.configs["label_connect"]
-                )
+            if "iot_device_client" in self.settings:
+                self.forms["connect"][dpg_node_tag] = self.configs["label_connected"]
+                if self.settings["gui"]:
+                    dpg.set_item_label(
+                        dpg_node_tag + ":connect", self.configs["label_connected"]
+                    )
+            else:
+                self.forms["connect"][dpg_node_tag] = self.configs["label_connect"]
+                if self.settings["gui"]:
+                    dpg.set_item_label(
+                        dpg_node_tag + ":connect", self.configs["label_connect"]
+                    )
 
     def callback_button_connect(self, sender, data, user_data):
         dpg_node_tag = user_data

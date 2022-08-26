@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""WeDX - Edge AI Pipeline functionality"""
+"""WeDX - Building Edge AI Pipeline with No-Code"""
 
 import argparse
 import asyncio
@@ -51,6 +51,7 @@ async def main():
     parser.add_argument("--no_gui", action="store_true")
     parser.add_argument("--no_webapi", action="store_true")
     parser.add_argument("--no_webapp", action="store_true")
+    parser.add_argument("--iotedge", action="store_true")
     args = parser.parse_args()
 
     # Set window settings
@@ -81,12 +82,15 @@ async def main():
     settings["gui"] = True
     settings["webapi"] = True
     settings["webapp"] = True
+    settings["iotedge"] = False
     if args.no_gui:
         settings["gui"] = False
     if args.no_webapi:
         settings["webapi"] = False
     if args.no_webapp:
         settings["webapp"] = False
+    if args.iotedge:
+        settings["iotedge"] = True
     shm_shape = np.zeros(
         (settings["video_streaming_height"], settings["video_streaming_width"], 3)
     ).astype(np.uint8)

@@ -6,6 +6,7 @@ from azure.iot.device import MethodResponse
 
 from gui.constants import tag
 from links.azure_iot_central.link import AzureIoTCentral
+from links.azure_iot_edge.link import AzureIoTEdge
 from links.azure_iot_hub.link import AzureIoTHub
 from links.azure_iot_hub_dps.link import AzureIoTHubDPS
 
@@ -22,7 +23,8 @@ class UserPreferences:
     toolbar = None
     user_settings = None
     links = {}
-    iot_device_instance = None
+    iot_device_client = None
+    iot_edge_module_client = None
     settings_filepath = None
     logging_level = None
 
@@ -252,7 +254,10 @@ class UserPreferences:
             # Update link status
             self.edge_ai_pipeline.change_toolbar_link()
         else:
-            self.connect_iot_device()
+            if self.settings["iotedge"]:
+                self.connect_iot_edge_module_client()
+            else:
+                self.connect_iot_device_client()
 
     def get_settings_data(self):
         settings_data = {
@@ -343,36 +348,45 @@ class UserPreferences:
             dpg.show_item(tag["window"]["iot_device_setting"] + ":key")
             dpg.hide_item(tag["window"]["iot_device_setting"] + ":string")
 
-    def connect_iot_device(self):
+    def connect_iot_edge_module_client(self):
+        self.iot_edge_module_client = AzureIoTEdge()
+        self.iot_edge_module_client.connect()
+        self.settings["iot_edge_module_client"] = self.iot_edge_module_client
+        self.iot_edge_module_client.module_client.on_method_request_received = (
+            self.method_request_handler
+        )
+        self.logger.debug("Receive a method request")
+
+    def connect_iot_device_client(self):
         if (
             "iot_device" in self.preferences
             and self.preferences["iot_device"]["link"] is not None
         ):
             link_class = self.links[self.preferences["iot_device"]["link"]]
-            self.iot_device_instance = link_class()
+            self.iot_device_client = link_class()
             if self.preferences["iot_device"]["link"] == "Azure IoT Central":
-                self.iot_device_instance.connect(
+                self.iot_device_client.connect(
                     registration_id=self.preferences["iot_device"]["rid"],
                     id_scope=self.preferences["iot_device"]["scope"],
                     symmetric_key=self.preferences["iot_device"]["key"],
                 )
                 self.logger.debug("Connect to Azure IoT Central")
             elif self.preferences["iot_device"]["link"] == "Azure IoT Hub":
-                self.iot_device_instance.connect(
+                self.iot_device_client.connect(
                     connection_string=self.preferences["iot_device"]["string"],
                 )
                 self.logger.debug("Connect to Azure IoT Hub")
             elif self.preferences["iot_device"]["link"] == "Azure IoT Hub DPS":
-                self.iot_device_instance.connect(
+                self.iot_device_client.connect(
                     provisioning_host=self.preferences["iot_device"]["host"],
                     registration_id=self.preferences["iot_device"]["rid"],
                     id_scope=self.preferences["iot_device"]["scope"],
                     symmetric_key=self.preferences["iot_device"]["key"],
                 )
                 self.logger.debug("Connect to Azure IoT Hub DPS")
-            if self.iot_device_instance.device_client is not None:
-                self.settings["iot_device_instance"] = self.iot_device_instance
-                self.iot_device_instance.device_client.on_method_request_received = (
+            if self.iot_device_client.device_client is not None:
+                self.settings["iot_device_client"] = self.iot_device_client
+                self.iot_device_client.device_client.on_method_request_received = (
                     self.method_request_handler
                 )
                 self.logger.debug("Receive a method request")
@@ -384,7 +398,7 @@ class UserPreferences:
             dpg.get_item_label(tag["window"]["iot_device_setting"] + ":connect")
             == "Connect"
         ):
-            if self.iot_device_instance is None:
+            if self.iot_device_client is None:
                 link_class = self.links[
                     dpg.get_value(tag["window"]["iot_device_setting"] + ":link")
                     if dpg.does_item_exist(
@@ -395,12 +409,12 @@ class UserPreferences:
                 dpg.set_item_label(
                     tag["window"]["iot_device_setting"] + ":connect", "..."
                 )
-                self.iot_device_instance = link_class()
+                self.iot_device_client = link_class()
                 if (
                     dpg.get_value(tag["window"]["iot_device_setting"] + ":link")
                     == "Azure IoT Central"
                 ):
-                    self.iot_device_instance.connect(
+                    self.iot_device_client.connect(
                         registration_id=dpg.get_value(
                             tag["window"]["iot_device_setting"] + ":rid"
                         ),
@@ -415,7 +429,7 @@ class UserPreferences:
                     dpg.get_value(tag["window"]["iot_device_setting"] + ":link")
                     == "Azure IoT Hub"
                 ):
-                    self.iot_device_instance.connect(
+                    self.iot_device_client.connect(
                         connection_string=dpg.get_value(
                             tag["window"]["iot_device_setting"] + ":string"
                         )
@@ -424,7 +438,7 @@ class UserPreferences:
                     dpg.get_value(tag["window"]["iot_device_setting"] + ":link")
                     == "Azure IoT Hub DPS"
                 ):
-                    self.iot_device_instance.connect(
+                    self.iot_device_client.connect(
                         provisioning_host=dpg.get_value(
                             tag["window"]["iot_device_setting"] + ":host"
                         ),
@@ -438,15 +452,15 @@ class UserPreferences:
                             tag["window"]["iot_device_setting"] + ":key"
                         ),
                     )
-            if self.iot_device_instance.device_client is not None:
+            if self.iot_device_client.device_client is not None:
                 dpg.set_item_label(
                     tag["window"]["iot_device_setting"] + ":connect", "Connected"
                 )
                 dpg.disable_item(tag["window"]["iot_device_setting"] + ":link")
                 dpg.show_item(tag["window"]["iot_device_setting"] + ":modal:success")
                 dpg.configure_item(tag["window"]["iot_device_setting"], show=False)
-                self.settings["iot_device_instance"] = self.iot_device_instance
-                self.iot_device_instance.device_client.on_method_request_received = (
+                self.settings["iot_device_client"] = self.iot_device_client
+                self.iot_device_client.device_client.on_method_request_received = (
                     self.method_request_handler
                 )
                 if dpg.get_value(tag["window"]["iot_device_setting"] + ":autoconnect"):
@@ -454,7 +468,7 @@ class UserPreferences:
                     with open(self.settings_filepath, "w") as fp:
                         json.dump(settings_data, fp, indent=2)
             else:
-                del self.iot_device_instance
+                del self.iot_device_client
                 dpg.set_item_label(
                     tag["window"]["iot_device_setting"] + ":connect", "Connect"
                 )
@@ -463,9 +477,9 @@ class UserPreferences:
             dpg.get_item_label(tag["window"]["iot_device_setting"] + ":connect")
             == "Connected"
         ):
-            self.iot_device_instance.release()
-            del self.iot_device_instance
-            del self.settings["iot_device_instance"]
+            self.iot_device_client.release()
+            del self.iot_device_client
+            del self.settings["iot_device_client"]
             dpg.set_item_label(
                 tag["window"]["iot_device_setting"] + ":connect", "Connect"
             )
@@ -517,9 +531,15 @@ class UserPreferences:
         method_response = MethodResponse.create_from_method_request(
             method_request, status, payload
         )
-        self.iot_device_instance.device_client.send_method_response(method_response)
+        if self.settings["iotedge"]:
+            self.iot_edge_module_client.module_client.send_method_response(method_response)
+        else:
+            self.iot_device_client.device_client.send_method_response(method_response)
 
     def close(self):
-        if self.iot_device_instance is not None:
-            if self.iot_device_instance.device_client is not None:
-                self.iot_device_instance.device_client.shutdown()
+        if self.iot_device_client is not None:
+            if self.iot_device_client.device_client is not None:
+                self.iot_device_client.device_client.shutdown()
+        if self.iot_edge_module_client is not None:
+            if self.iot_edge_module_client.module_client is not None:
+                self.iot_edge_module_client.module_client.shutdown()

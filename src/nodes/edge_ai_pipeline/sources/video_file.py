@@ -303,11 +303,21 @@ class EdgeAINode(BaseNode):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         if self.settings["gui"]:
             if "loop" in params:
+                self.forms["loop"][dpg_node_tag] = params["loop"]
                 dpg.set_value(dpg_node_tag + ":loop", params["loop"])
             if "skiprate" in params:
+                self.forms["skiprate"][dpg_node_tag] = params["skiprate"]
                 dpg.set_value(dpg_node_tag + ":skiprate", params["skiprate"])
             if "video_filepath" in params and os.path.exists(params["video_filepath"]):
                 self.configs["video_paths"][dpg_node_tag] = params["video_filepath"]
+        else:
+            if "loop" in params:
+                self.forms["loop"][dpg_node_tag] = params["loop"]
+            if "skiprate" in params:
+                self.forms["skiprate"][dpg_node_tag] = params["skiprate"]
+            if "video_filepath" in params and os.path.exists(params["video_filepath"]):
+                self.configs["video_paths"][dpg_node_tag] = params["video_filepath"]
+
 
     def callback_file_dialog(self, sender, app_data, user_data):
         dpg_node_tag = user_data
