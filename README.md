@@ -7,13 +7,13 @@ It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without
 
 <div align="center">
 
-### Edge AI Pipeline functionality from Edge to Cloud
+### Building Edge AI Pipelines with No-Code
 
 </div>
 
 ----
 
-[![WeDX](https://img.shields.io/badge/WeDX-0.10.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.10.0)
+[![WeDX](https://img.shields.io/badge/WeDX-0.11.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.11.0)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 
@@ -21,11 +21,16 @@ It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without
 
 - No-code experience to easily build Edge AI pipeline.
 - Simple pipeline, Easy to understand code.
-- Support Windows, macOS and Linux OS.
+- Support x64 Windows, macOS and Linux OS.
+- Support container for arm64v8 and amd64 architecture without GUI.
 - Import and export node configuration.
 - Asynchronous processing of frame refresh.
-- Container support for arm64v8 and amd64 architecture without GUI.
-- Controllable by Azure IoT device. (Azure IoT Central, Azure IoT Hub, Azure IoT Hub DPS)
+- Controllable by Azure IoT Edge device. (Azure IoT Edge, Azure IoT Edge DPS, Azure Percept, Azure IoT Central)
+  - startPipeline
+  - stopPipeline
+  - importPipeline
+  - exportPipeline
+- Controllable by Azure IoT device. (Azure IoT Hub, Azure IoT Hub DPS, Azure IoT Central)
   - startPipeline
   - stopPipeline
   - importPipeline
@@ -35,7 +40,7 @@ It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without
   - stoppipeline[POST]
   - importpipeline[POST]
   - exportpipeline[POST]
-- Integrated [Streamlit](https://streamlit.io/) for Web App.  (http://localhost:1212)
+- Integrated [Streamlit](https://streamlit.io/) for Web App. (http://localhost:1212)
 - Controllable Logging Level.
 - Three steps in Edge AI pipeline : Source, Process, and Sink.
   - Source nodes
@@ -129,6 +134,7 @@ python3 src/main.py [Arguments]
 --no_gui : Running WeDX without GUI.
 --no_webapi : Running WeDX without launching Web API.
 --no_webapp : Running WeDX without launching Web App.
+--iotedge : Connecting to Azure IoT Edge
 ```
 
 
