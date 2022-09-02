@@ -2,4 +2,4 @@
 -r common.txt
 
 # specific dependencies
-onnxruntime-gpu==1.11.1
+onnxruntime-gpu==1.12.1

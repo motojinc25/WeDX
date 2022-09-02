@@ -75,6 +75,11 @@
                       {
                         "HostPort": "1212"
                       }
+                    ],
+                    "8080/tcp": [
+                      {
+                        "HostPort": "8080"
+                      }
                     ]
                   },
                   "Privileged": true

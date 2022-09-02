@@ -10,11 +10,18 @@ from links.mq_req_rep.link import MessageQueueReqRep
 app = Flask(__name__)
 mq = MessageQueueReqRep()
 shared_frame = None
+web_netron_port = None
 
 
 @app.route("/", methods=["GET"])
 async def index():
     return render_template("index.html")
+
+
+@app.route("/netron", methods=["GET"])
+async def netron():
+    iframe = "http://" + request.host.split(':')[0] + ":" + str(web_netron_port)
+    return render_template("netron.html", iframe=iframe)
 
 
 @app.route("/apis", methods=["GET"])
@@ -68,10 +75,12 @@ async def video_feed():
     return Response(gen(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
-def run_api(width, height, **kwargs):
+def run_api(width, height, netron_port, **kwargs):
     global shared_frame
+    global web_netron_port
     existing_shm = shared_memory.SharedMemory(name="wedx_shm")
     shared_frame = np.ndarray(
         (height, width, 3), dtype=np.uint8, buffer=existing_shm.buf
     )
+    web_netron_port = netron_port
     app.run(**kwargs)

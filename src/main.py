@@ -22,6 +22,7 @@ from gui.studio import WeDXStudio
 from links.mq_req_rep.link import MessageQueueReqRep
 from managers.edge_ai_pipeline import EdgeAIPipeline
 from managers.user_preferences import UserPreferences
+from servers.netron import NetronServer
 from servers.webapi import run_api
 
 
@@ -81,6 +82,7 @@ async def main():
     settings["camera_capture_list"] = caps
     settings["gui"] = True
     settings["webapi"] = True
+    settings["netron"] = None
     settings["webapp"] = True
     settings["iotedge"] = False
     if args.no_gui:
@@ -111,11 +113,13 @@ async def main():
                 (
                     settings["video_streaming_width"],
                     settings["video_streaming_height"],
+                    settings["netron_port"],
                 )
             ),
             kwargs={"host": "0.0.0.0", "port": settings["webapi_port"]},
         )
         proc["webapi"].start()
+        settings["netron"] = NetronServer(settings)
     if settings["webapp"]:
         proc["webapp"] = subprocess.Popen(
             [
@@ -228,6 +232,8 @@ async def main():
         proc["webapi"].terminate()
     if settings["webapp"]:
         proc["webapp"].terminate()
+    if settings["netron"]:
+        settings["netron"].stop()
 
     # Release shared memory
     created_shm.unlink()

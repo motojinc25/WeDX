@@ -1,6 +1,7 @@
 import copy
 import logging
 import os
+import webbrowser
 
 from gui.constants import Attribute, PinShape
 from models.onnx_custom_vision.model import (
@@ -203,6 +204,13 @@ class EdgeAINode(BaseNode):
                             user_data=dpg_node_tag,
                             tag=dpg_node_tag + ":modelfile",
                         )
+                        dpg.add_button(
+                            label="Netron",
+                            show=False,
+                            callback=self.callback_change_netron,
+                            user_data=dpg_node_tag,
+                            tag=dpg_node_tag + ":modelfileNetron",
+                        )
                     with dpg.group(horizontal=True):
                         dpg.add_text(
                             "Select Model Labels : not yet",
@@ -368,6 +376,7 @@ class EdgeAINode(BaseNode):
                 dpg.disable_item(dpg_node_tag + ":model")
                 dpg.disable_item(dpg_node_tag + ":modelfile")
                 dpg.disable_item(dpg_node_tag + ":labelsfile")
+                dpg.show_item(dpg_node_tag + ":modelfileNetron")
                 self.configs["status"][dpg_node_tag] = "active"
             else:
                 del self.configs["instances"][dpg_node_tag]
@@ -375,6 +384,7 @@ class EdgeAINode(BaseNode):
                     dpg_node_tag + ":connect", self.configs["label_connect"]
                 )
                 dpg.show_item(dpg_node_tag + ":modal")
+                dpg.hide_item(dpg_node_tag + ":modelfileNetron")
         elif (
             dpg.get_item_label(dpg_node_tag + ":connect")
             == self.configs["label_connected"]
@@ -385,6 +395,7 @@ class EdgeAINode(BaseNode):
             dpg.enable_item(dpg_node_tag + ":model")
             dpg.enable_item(dpg_node_tag + ":modelfile")
             dpg.enable_item(dpg_node_tag + ":labelsfile")
+            dpg.hide_item(dpg_node_tag + ":modelfileNetron")
 
     def callback_file_dialog_model(self, sender, app_data, user_data):
         dpg_node_tag = user_data
@@ -404,3 +415,8 @@ class EdgeAINode(BaseNode):
     def callback_change_model(self, sender, data, user_data):
         dpg_node_tag = user_data
         self.forms["model"][dpg_node_tag] = data
+
+    def callback_change_netron(self, sender, data, user_data):
+        dpg_node_tag = user_data
+        self.settings["netron"].reload(self.configs["model_filepaths"][dpg_node_tag])
+        webbrowser.open("http://localhost:" + str(self.settings["webapi_port"]) + "/netron")

@@ -29,13 +29,13 @@
               <a class="nav-link" aria-current="page" href="/">Home</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link active" href="/stream">Video Streaming</a>
+              <a class="nav-link" href="/stream">Video Streaming</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/apis">APIs</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="/netron">Netron</a>
+              <a class="nav-link active" href="/netron">Netron</a>
             </li>
           </ul>
         </div>
@@ -43,10 +43,7 @@
     </nav>
   </header>
   <main class="flex-shrink-0">
-    <div class="container">
-      <h1 class="mt-5">WeDX Video Streaming</h1>
-      <img src="{{ url_for('video_feed') }}">
-    </div>
+    <iframe frameborder='0' noresize='noresize' style='position: absolute; background: transparent; width: 100%; height:100%;' src="{{ iframe }}" frameborder="0"></iframe>
   </main>
 </body>
 
