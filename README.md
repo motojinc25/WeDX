@@ -18,7 +18,7 @@ It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without
 
 ----
 
-[![WeDX](https://img.shields.io/badge/WeDX-0.11.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.11.0)
+[![WeDX](https://img.shields.io/badge/WeDX-0.12.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.12.0)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 
@@ -30,6 +30,7 @@ It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without
 - Support container for arm64v8 and amd64 architecture without GUI.
 - Import and export node configuration.
 - Asynchronous processing of frame refresh.
+- [Netron](https://github.com/lutzroeder/netron) integration for visualizing neural network models.
 - Controllable by Azure IoT Edge device. (Azure IoT Edge, Azure IoT Edge DPS, Azure Percept, Azure IoT Central)
   - startPipeline
   - stopPipeline
