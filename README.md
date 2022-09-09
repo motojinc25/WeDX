@@ -18,7 +18,7 @@ It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without
 
 ----
 
-[![WeDX](https://img.shields.io/badge/WeDX-0.12.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.12.0)
+[![WeDX](https://img.shields.io/badge/WeDX-0.13.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.13.0)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 
@@ -80,52 +80,46 @@ It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without
     - Video Screen
 
 
-## 📌 Installation
+## 📌 Get Started
 
-### Windows(amd64)
+### Prerequisites
 
-- Prerequisites
-  - [Git client](https://git-scm.com/downloads/)
-  - [Python 3.9](https://www.python.org/downloads/windows/)
+- [Git client](https://git-scm.com/downloads/)
+- [Python 3.9](https://www.python.org/downloads/)
+
+### Windows(x64)
 
 ```
 C:\> git clone https://github.com/motojinc25/WeDX
 C:\> cd WeDX
-C:\> python -m venv .venv
-C:\> .\.venv\Scripts\activate.bat
-C:\> python -m pip install --upgrade pip
-C:\> python -m pip install -r .\requirements\win_amd64.txt
-C:\> python .\src\main.py
+C:\WeDX> python -V
+Python 3.9.*
+C:\WeDX> run-wedx.bat
 ```
 
-### macOS(x86_64)
+### Windows 11 WSL2 with CUDA(x64)
 
-- Prerequisites
-  - [Python 3.9](https://www.python.org/downloads/macos/)
+- Install NVIDIA Graphic Card Driver (Windows 11)
+- Install CUDA Toolkit (CUDA 11.4, Ubuntu 20.04)
+- Download [ZLIB DLL](https://www.dll-files.com/zlib.dll.html)
+- Install cuDNN (CUDA 11.4, Ubuntu 20.04)
+
+```
+C:\> git clone https://github.com/motojinc25/WeDX
+C:\> cd WeDX
+C:\WeDX> python -V
+Python 3.9.*
+C:\WeDX> run-wedx.bat
+```
+
+### macOS(x64) / Linux(x64)
 
 ```bash
 $ git clone https://github.com/motojinc25/WeDX
 $ cd WeDX
-$ python3 -m venv .venv
-$ source .venv/bin/activate
-$ pip3 install --upgrade pip
-$ pip3 install -r requirements/macos_x86_64.txt
-$ python3 src/main.py
-```
-
-### Linux(x86_64)
-
-- Prerequisites
-  - Python 3.9
-
-```bash
-$ git clone https://github.com/motojinc25/WeDX
-$ cd WeDX
-$ python3 -m venv .venv
-$ source .venv/bin/activate
-$ pip3 install --upgrade pip
-$ pip3 install -r requirements/manylinux_x86_64.txt
-$ python3 src/main.py
+$ python3 -V
+Python 3.9.*
+$ ./run-wedx.sh
 ```
 
 
@@ -142,6 +136,13 @@ python3 src/main.py [Arguments]
 --no_webapp : Running WeDX without launching Web App.
 --iotedge : Connecting to Azure IoT Edge
 ```
+
+
+## Azure Bicep Templates
+
+[Azure Bicep](https://docs.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview) under "[infra/azure/*.bicep](./infra/azure/README.md)" can quickly deploy Azure cloud resources supported by the latest version of WeDX.
+
+![image](./docs/assets/images/azure_0.13.0.png)
 
 
 ## 📌 Special thanks
