@@ -1,6 +1,6 @@
 import logging
 
-from gui.constants import Attribute, PinShape
+from gui.constants import Attribute, NoteState, PinShape
 from links.mqtt_client.link import MQTTClient
 from nodes.edge_ai_pipeline.base import BaseNode
 
@@ -23,16 +23,28 @@ class EdgeAINode(BaseNode):
             "MQTT V3.1.1": MQTTClient,
         }
         self.configs["instances"] = {}
-        self.configs["label_connect"] = "Connect"
-        self.configs["label_connected"] = "Connected"
+        self.configs["states"] = {}
         self.forms = {}
-        self.forms["connect"] = {}
+        self.forms["protocol"] = {}
+        self.forms["host"] = {}
+        self.forms["port"] = {}
+        self.forms["client_id"] = {}
+        self.forms["username"] = {}
+        self.forms["password"] = {}
+        self.forms["topic"] = {}
 
     def add_node(self, parent, node_id, pos):
         # Describe node attribute tags
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         dpg_pin_tags = self.get_tag_list(dpg_node_tag)
-        self.forms["connect"][dpg_node_tag] = self.configs["label_connect"]
+        self.configs["states"][dpg_node_tag] = NoteState.CONNECT
+        self.forms["protocol"][dpg_node_tag] = list(self.configs["protocols"].keys())[0]
+        self.forms["host"][dpg_node_tag] = ""
+        self.forms["port"][dpg_node_tag] = ""
+        self.forms["client_id"][dpg_node_tag] = ""
+        self.forms["username"][dpg_node_tag] = ""
+        self.forms["password"][dpg_node_tag] = ""
+        self.forms["topic"][dpg_node_tag] = ""
 
         if self.settings["gui"]:
             # Add a Popup window
@@ -94,7 +106,7 @@ class EdgeAINode(BaseNode):
                     dpg.add_spacer(height=5)
                     dpg.add_combo(
                         list(self.configs["protocols"].keys()),
-                        default_value=list(self.configs["protocols"].keys())[0],
+                        default_value=self.forms["protocol"][dpg_node_tag],
                         width=self.settings["node_width"],
                         tag=dpg_node_tag + ":protocol",
                     )
@@ -106,6 +118,7 @@ class EdgeAINode(BaseNode):
                         no_spaces=True,
                         width=self.settings["node_width"] - 65,
                         show=True,
+                        default_value=self.forms["host"][dpg_node_tag],
                         tag=dpg_node_tag + ":host",
                     )
                     with dpg.tooltip(dpg_node_tag + ":host"):
@@ -118,6 +131,7 @@ class EdgeAINode(BaseNode):
                         label="Port",
                         no_spaces=True,
                         width=self.settings["node_width"] - 65,
+                        default_value=self.forms["port"][dpg_node_tag],
                         tag=dpg_node_tag + ":port",
                     )
                     with dpg.tooltip(dpg_node_tag + ":port"):
@@ -129,12 +143,14 @@ class EdgeAINode(BaseNode):
                         label="Client ID",
                         no_spaces=True,
                         width=self.settings["node_width"] - 65,
+                        default_value=self.forms["client_id"][dpg_node_tag],
                         tag=dpg_node_tag + ":client_id",
                     )
                     dpg.add_input_text(
                         label="Username",
                         no_spaces=True,
                         width=self.settings["node_width"] - 65,
+                        default_value=self.forms["username"][dpg_node_tag],
                         tag=dpg_node_tag + ":username",
                     )
                     dpg.add_input_text(
@@ -143,6 +159,7 @@ class EdgeAINode(BaseNode):
                         width=self.settings["node_width"] - 65,
                         show=True,
                         password=True,
+                        default_value=self.forms["password"][dpg_node_tag],
                         tag=dpg_node_tag + ":password",
                     )
                     dpg.add_input_text(
@@ -150,13 +167,14 @@ class EdgeAINode(BaseNode):
                         no_spaces=True,
                         width=self.settings["node_width"] - 65,
                         show=True,
+                        default_value=self.forms["topic"][dpg_node_tag],
                         tag=dpg_node_tag + ":topic",
                     )
 
                 # Add a button for publishing
                 with dpg.node_attribute(attribute_type=int(Attribute.STATIC)):
                     dpg.add_button(
-                        label=self.forms["connect"][dpg_node_tag],
+                        label=self.configs["states"][dpg_node_tag],
                         width=self.settings["node_width"],
                         callback=self.callback_button_connect,
                         user_data=dpg_node_tag,
@@ -179,7 +197,7 @@ class EdgeAINode(BaseNode):
 
         # Publish message
         if message is not None:
-            if self.forms["connect"][dpg_node_tag] == self.configs["label_connected"]:
+            if self.configs["states"][dpg_node_tag] == NoteState.CONNECTED:
                 if dpg_node_tag in self.configs["instances"]:
                     self.configs["instances"][dpg_node_tag].publish_message(message)
 
@@ -193,6 +211,8 @@ class EdgeAINode(BaseNode):
 
     def delete(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        if dpg_node_tag in self.configs["instances"]:
+            self.configs["instances"][dpg_node_tag].release()
         if self.settings["gui"]:
             dpg.delete_item(dpg_node_tag + ":modal")
             dpg.delete_item(dpg_node_tag)
@@ -200,44 +220,92 @@ class EdgeAINode(BaseNode):
     def get_export_params(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         params = {}
+        params["version"] = self.version
+        params["position"] = [0, 0]
+        params["protocol"] = self.forms["protocol"][dpg_node_tag]
+        params["host"] = self.forms["host"][dpg_node_tag]
+        params["port"] = self.forms["port"][dpg_node_tag]
+        params["client_id"] = self.forms["client_id"][dpg_node_tag]
+        params["username"] = self.forms["username"][dpg_node_tag]
+        params["password"] = self.forms["password"][dpg_node_tag]
+        params["topic"] = self.forms["topic"][dpg_node_tag]
         if self.settings["gui"]:
-            params["version"] = self.version
             params["position"] = dpg.get_item_pos(dpg_node_tag)
-            params["protocol"] = dpg.get_value(dpg_node_tag + ":protocol")
-            params["host"] = dpg.get_value(dpg_node_tag + ":host")
-            params["port"] = dpg.get_value(dpg_node_tag + ":port")
-            params["client_id"] = dpg.get_value(dpg_node_tag + ":client_id")
-            params["username"] = dpg.get_value(dpg_node_tag + ":username")
-            params["password"] = dpg.get_value(dpg_node_tag + ":password")
-            params["topic"] = dpg.get_value(dpg_node_tag + ":topic")
         return params
 
     def set_import_params(self, node_id, params):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        if self.settings["gui"]:
-            if "protocol" in params:
+        if "protocol" in params:
+            self.forms["protocol"][dpg_node_tag] = params["protocol"]
+            if self.settings["gui"]:
                 dpg.set_value(dpg_node_tag + ":protocol", params["protocol"])
-            if "host" in params:
+        if "host" in params:
+            self.forms["host"][dpg_node_tag] = params["host"]
+            if self.settings["gui"]:
                 dpg.set_value(dpg_node_tag + ":host", params["host"])
-            if "port" in params:
+        if "port" in params:
+            self.forms["port"][dpg_node_tag] = params["port"]
+            if self.settings["gui"]:
                 dpg.set_value(dpg_node_tag + ":port", params["port"])
-            if "client_id" in params:
+        if "client_id" in params:
+            self.forms["client_id"][dpg_node_tag] = params["client_id"]
+            if self.settings["gui"]:
                 dpg.set_value(dpg_node_tag + ":client_id", params["client_id"])
-            if "username" in params:
+        if "username" in params:
+            self.forms["username"][dpg_node_tag] = params["username"]
+            if self.settings["gui"]:
                 dpg.set_value(dpg_node_tag + ":username", params["username"])
-            if "password" in params:
+        if "password" in params:
+            self.forms["password"][dpg_node_tag] = params["password"]
+            if self.settings["gui"]:
                 dpg.set_value(dpg_node_tag + ":password", params["password"])
-            if "topic" in params:
+        if "topic" in params:
+            self.forms["topic"][dpg_node_tag] = params["topic"]
+            if self.settings["gui"]:
                 dpg.set_value(dpg_node_tag + ":topic", params["topic"])
+        if (
+            dpg_node_tag in self.forms["protocol"]
+            and dpg_node_tag in self.forms["host"]
+            and dpg_node_tag in self.forms["port"]
+            and dpg_node_tag in self.forms["client_id"]
+            and dpg_node_tag in self.forms["username"]
+            and dpg_node_tag in self.forms["password"]
+            and dpg_node_tag in self.forms["topic"]
+        ):
+            self.configs["instances"][dpg_node_tag] = MQTTClient(
+                host=dpg.get_value(dpg_node_tag + ":host"),
+                port=dpg.get_value(dpg_node_tag + ":port"),
+                client_id=dpg.get_value(dpg_node_tag + ":client_id"),
+                username=dpg.get_value(dpg_node_tag + ":username"),
+                password=dpg.get_value(dpg_node_tag + ":password"),
+                topic=dpg.get_value(dpg_node_tag + ":topic"),
+            )
+            if self.settings["gui"]:
+                dpg.set_item_label(dpg_node_tag + ":connect", "...")
+            self.configs["instances"][dpg_node_tag].connect()
+            if self.configs["instances"][dpg_node_tag].is_connected:
+                self.configs["states"][dpg_node_tag] = NoteState.CONNECTED
+                if self.settings["gui"]:
+                    dpg.set_item_label(dpg_node_tag + ":connect", NoteState.CONNECTED)
+                    dpg.disable_item(dpg_node_tag + ":protocol")
+                    dpg.disable_item(dpg_node_tag + ":host")
+                    dpg.disable_item(dpg_node_tag + ":port")
+                    dpg.disable_item(dpg_node_tag + ":client_id")
+                    dpg.disable_item(dpg_node_tag + ":username")
+                    dpg.disable_item(dpg_node_tag + ":password")
+                    dpg.disable_item(dpg_node_tag + ":topic")
+            else:
+                if self.settings["gui"]:
+                    dpg.set_item_label(dpg_node_tag + ":connect", NoteState.CONNECT)
 
     def callback_button_connect(self, sender, data, user_data):
         dpg_node_tag = user_data
-        if self.forms["connect"][dpg_node_tag] == self.configs["label_connect"]:
+        if self.configs["states"][dpg_node_tag] == NoteState.CONNECT:
             if dpg_node_tag not in self.configs["instances"]:
                 dpg.set_item_label(dpg_node_tag + ":connect", "...")
                 self.configs["instances"][dpg_node_tag] = MQTTClient(
                     host=dpg.get_value(dpg_node_tag + ":host"),
-                    port=int(dpg.get_value(dpg_node_tag + ":port")),
+                    port=dpg.get_value(dpg_node_tag + ":port"),
                     client_id=dpg.get_value(dpg_node_tag + ":client_id"),
                     username=dpg.get_value(dpg_node_tag + ":username"),
                     password=dpg.get_value(dpg_node_tag + ":password"),
@@ -245,9 +313,7 @@ class EdgeAINode(BaseNode):
                 )
                 self.configs["instances"][dpg_node_tag].connect()
             if self.configs["instances"][dpg_node_tag].is_connected:
-                dpg.set_item_label(
-                    dpg_node_tag + ":connect", self.configs["label_connected"]
-                )
+                dpg.set_item_label(dpg_node_tag + ":connect", NoteState.CONNECTED)
                 dpg.disable_item(dpg_node_tag + ":protocol")
                 dpg.disable_item(dpg_node_tag + ":host")
                 dpg.disable_item(dpg_node_tag + ":port")
@@ -255,18 +321,24 @@ class EdgeAINode(BaseNode):
                 dpg.disable_item(dpg_node_tag + ":username")
                 dpg.disable_item(dpg_node_tag + ":password")
                 dpg.disable_item(dpg_node_tag + ":topic")
-                self.forms["connect"][dpg_node_tag] = self.configs["label_connected"]
+                self.configs["states"][dpg_node_tag] = NoteState.CONNECTED
+                self.forms["host"][dpg_node_tag] = dpg.get_value(dpg_node_tag + ":host")
+                self.forms["port"][dpg_node_tag] = dpg.get_value(dpg_node_tag + ":port")
+                self.forms["client_id"][dpg_node_tag] = dpg.get_value(dpg_node_tag + ":client_id")
+                self.forms["username"][dpg_node_tag] = dpg.get_value(dpg_node_tag + ":username")
+                self.forms["password"][dpg_node_tag] = dpg.get_value(dpg_node_tag + ":password")
+                self.forms["topic"][dpg_node_tag] = dpg.get_value(dpg_node_tag + ":topic")
             else:
                 del self.configs["instances"][dpg_node_tag]
-                dpg.set_item_label(
-                    dpg_node_tag + ":connect", self.configs["label_connect"]
-                )
-                self.forms["connect"][dpg_node_tag] = self.configs["label_connect"]
+                dpg.set_item_label(dpg_node_tag + ":connect", NoteState.CONNECT)
+                self.configs["states"][dpg_node_tag] = NoteState.CONNECT
                 dpg.show_item(dpg_node_tag + ":modal")
-        elif self.forms["connect"][dpg_node_tag] == self.configs["label_connected"]:
-            self.configs["instances"][dpg_node_tag].release()
-            del self.configs["instances"][dpg_node_tag]
-            dpg.set_item_label(dpg_node_tag + ":connect", self.configs["label_connect"])
+        elif self.configs["states"][dpg_node_tag] == NoteState.CONNECTED:
+            if dpg_node_tag in self.configs["instances"]:
+                self.configs["instances"][dpg_node_tag].release()
+                del self.configs["instances"][dpg_node_tag]
+            self.configs["states"][dpg_node_tag] = NoteState.CONNECT
+            dpg.set_item_label(dpg_node_tag + ":connect", NoteState.CONNECT)
             dpg.enable_item(dpg_node_tag + ":protocol")
             dpg.enable_item(dpg_node_tag + ":host")
             dpg.enable_item(dpg_node_tag + ":port")

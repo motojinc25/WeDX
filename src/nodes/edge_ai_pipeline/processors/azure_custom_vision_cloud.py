@@ -262,6 +262,12 @@ class EdgeAINode(BaseNode):
 
     def delete(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
+        if dpg_node_tag in self.configs["instances"]:
+            del self.configs["instances"][dpg_node_tag]
+        if dpg_node_tag in self.configs["messages"]:
+            del self.configs["messages"][dpg_node_tag]
+        if dpg_node_tag in self.configs["frames"]:
+            del self.configs["frames"][dpg_node_tag]
         if self.settings["gui"]:
             dpg.delete_item(dpg_node_tag + ":modal")
             dpg.delete_item(dpg_node_tag + ":texture")
@@ -270,21 +276,20 @@ class EdgeAINode(BaseNode):
     def get_export_params(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         params = {}
+        params["version"] = self.version
+        params["position"] = [0, 0]
+        params["link"] = self.forms["link"][dpg_node_tag]
+        params["url"] = self.forms["url"][dpg_node_tag]
+        params["key"] = self.forms["key"][dpg_node_tag]
         if self.settings["gui"]:
-            params["version"] = self.version
             params["position"] = dpg.get_item_pos(dpg_node_tag)
-            params["link"] = self.forms["link"][dpg_node_tag]
-            if params["link"] == "Prediction API":
-                params["url"] = self.forms["url"][dpg_node_tag]
-                params["key"] = self.forms["key"][dpg_node_tag]
         return params
 
     def set_import_params(self, node_id, params):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        if "link" in params:
-            self.forms["link"][dpg_node_tag] = params["link"]
-            if self.settings["gui"]:
-                dpg.set_value(dpg_node_tag + ":link", params["link"])
+        self.forms["link"][dpg_node_tag] = params["link"]
+        if self.settings["gui"]:
+            dpg.set_value(dpg_node_tag + ":link", params["link"])
         if "url" in params:
             self.forms["url"][dpg_node_tag] = params["url"]
             if self.settings["gui"]:
@@ -293,6 +298,27 @@ class EdgeAINode(BaseNode):
             self.forms["key"][dpg_node_tag] = params["key"]
             if self.settings["gui"]:
                 dpg.set_value(dpg_node_tag + ":key", params["key"])
+        if (
+            dpg_node_tag in self.forms["url"]
+            and dpg_node_tag in self.forms["key"]
+        ):
+            link_class = self.configs["link"][self.forms["link"][dpg_node_tag]]
+            if self.settings["gui"]:
+                dpg.set_item_label(dpg_node_tag + ":connect", "...")
+            self.configs["instances"][dpg_node_tag] = link_class()
+            self.configs["instances"][dpg_node_tag].connect(
+                url=self.forms["url"][dpg_node_tag],
+                key=self.forms["key"][dpg_node_tag],
+            )
+            if self.configs["instances"][dpg_node_tag].client:
+                if self.settings["gui"]:
+                    dpg.set_item_label(
+                        dpg_node_tag + ":connect", self.configs["label_prediction"]
+                    )
+                    dpg.disable_item(dpg_node_tag + ":link")
+            else:
+                if self.settings["gui"]:
+                    dpg.set_item_label(dpg_node_tag + ":connect", self.configs["label_connect"])
 
     def callback_change_link(self, sender, data, user_data):
         dpg_node_tag = user_data

@@ -421,6 +421,7 @@ class EdgeAIPipeline:
         self.node_tags = []
         self.node_links = []
         self.node_id = 0
+        self.settings["init"] = True
 
     def callback_file_dialog_export(self, sender, app_data, user_data):
         export_data = self.export_pipeline()

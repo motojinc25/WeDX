@@ -222,7 +222,7 @@ class EdgeAINode(BaseNode):
                         self.configs["video_captures"][dpg_node_tag].release()
                         del self.configs["video_captures"][dpg_node_tag]
                         del self.configs["video_paths"][dpg_node_tag]
-                        self.configs["prev_video_paths"][dpg_node_tag]
+                        del self.configs["prev_video_paths"][dpg_node_tag]
                         break
                 self.configs["frame_counts"][dpg_node_tag] += 1
                 if (self.configs["frame_counts"][dpg_node_tag] % skip_rate) == 0:
@@ -281,22 +281,15 @@ class EdgeAINode(BaseNode):
     def get_export_params(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         params = {}
+        params["version"] = self.version
+        params["position"] = [0, 0]
+        params["loop"] = self.forms["loop"][dpg_node_tag]
+        params["skiprate"] = int(self.forms["skiprate"][dpg_node_tag])
+        params["video_filepath"] = ""
+        if dpg_node_tag in self.configs["video_paths"]:
+            params["video_filepath"] = self.configs["video_paths"][dpg_node_tag]
         if self.settings["gui"]:
-            params["version"] = self.version
             params["position"] = dpg.get_item_pos(dpg_node_tag)
-            params["loop"] = (
-                dpg.get_value(dpg_node_tag + ":loop")
-                if dpg.does_item_exist(dpg_node_tag + ":loop")
-                else None
-            )
-            params["skiprate"] = int(
-                dpg.get_value(dpg_node_tag + ":skiprate")
-                if dpg.does_item_exist(dpg_node_tag + ":skiprate")
-                else None
-            )
-            params["video_filepath"] = ""
-            if dpg_node_tag in self.configs["video_paths"]:
-                params["video_filepath"] = self.configs["video_paths"][dpg_node_tag]
         return params
 
     def set_import_params(self, node_id, params):
@@ -317,7 +310,6 @@ class EdgeAINode(BaseNode):
                 self.forms["skiprate"][dpg_node_tag] = params["skiprate"]
             if "video_filepath" in params and os.path.exists(params["video_filepath"]):
                 self.configs["video_paths"][dpg_node_tag] = params["video_filepath"]
-
 
     def callback_file_dialog(self, sender, app_data, user_data):
         dpg_node_tag = user_data

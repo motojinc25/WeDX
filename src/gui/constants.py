@@ -36,3 +36,8 @@ class Attribute(IntEnum):
     INPUT = 0  # mvNode_Attr_Input
     OUTPUT = 1  # mvNode_Attr_Output
     STATIC = 2  # mvNode_Attr_Static
+
+
+class NoteState:
+    CONNECT = "Connect"
+    CONNECTED = "Connected"

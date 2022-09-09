@@ -23,7 +23,10 @@ class MQTTClient:
 
     def __init__(self, host, port, client_id, username, password, topic):
         self.host = host
-        self.port = port
+        try:
+            self.port = int(port) if isinstance(port, str) else port
+        except ValueError:
+            self.port = 0
         self.client_id = client_id
         self.username = username
         self.password = password
@@ -47,11 +50,14 @@ class MQTTClient:
         self.client.username_pw_set(username=self.username, password=self.password)
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
-        self.client.loop_start()
-        self.client.connect(self.host, self.port)
-        for _ in range(10):
-            if not self.is_connected:
-                time.sleep(1)
+        try:
+            self.client.loop_start()
+            self.client.connect(self.host, self.port)
+            for _ in range(10):
+                if not self.is_connected:
+                    time.sleep(1)
+        except:
+            pass
 
     def release(self):
         self.client.loop_stop()

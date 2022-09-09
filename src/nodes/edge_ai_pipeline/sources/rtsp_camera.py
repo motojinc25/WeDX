@@ -214,10 +214,11 @@ class EdgeAINode(BaseNode):
     def get_export_params(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         params = {}
+        params["version"] = self.version
+        params["position"] = [0, 0]
+        params["url"] = self.forms["url"][dpg_node_tag]
         if self.settings["gui"]:
-            params["version"] = self.version
             params["position"] = dpg.get_item_pos(dpg_node_tag)
-            params["url"] = self.forms["url"][dpg_node_tag]
         return params
 
     def set_import_params(self, node_id, params):
@@ -226,6 +227,20 @@ class EdgeAINode(BaseNode):
             self.forms["url"][dpg_node_tag] = params["url"]
             if self.settings["gui"]:
                 dpg.set_value(dpg_node_tag + ":url", params["url"])
+            try:
+                cap = cv2.VideoCapture(params["url"])
+                if cap.isOpened():
+                    self.configs["instances"][dpg_node_tag] = cap
+                    if self.settings["gui"]:
+                        dpg.set_item_label(
+                            dpg_node_tag + ":connect", self.configs["label_connected"]
+                        )
+                        dpg.disable_item(dpg_node_tag + ":url")
+                    self.forms["connect"][dpg_node_tag] = self.configs[
+                        "label_connected"
+                    ]
+            except:
+                pass
 
     def callback_button_connect(self, sender, app_data, user_data):
         dpg_node_tag = user_data
@@ -239,26 +254,28 @@ class EdgeAINode(BaseNode):
                 dpg.set_item_label(dpg_node_tag + ":connect", "...")
                 try:
                     cap = cv2.VideoCapture(rtsp_url)
+                    if cap.isOpened():
+                        self.configs["instances"][dpg_node_tag] = cap
+                        dpg.set_item_label(
+                            dpg_node_tag + ":connect", self.configs["label_connected"]
+                        )
+                        dpg.disable_item(dpg_node_tag + ":url")
+                        self.forms["url"][dpg_node_tag] = dpg.get_value(
+                            dpg_node_tag + ":url"
+                        )
+                        self.forms["connect"][dpg_node_tag] = self.configs[
+                            "label_connected"
+                        ]
+                    else:
+                        dpg.set_item_label(
+                            dpg_node_tag + ":connect", self.configs["label_connect"]
+                        )
+                        self.forms["connect"][dpg_node_tag] = self.configs[
+                            "label_connect"
+                        ]
+                        dpg.show_item(dpg_node_tag + ":modal")
                 except:
                     pass
-                if cap.isOpened():
-                    self.configs["instances"][dpg_node_tag] = cap
-                    dpg.set_item_label(
-                        dpg_node_tag + ":connect", self.configs["label_connected"]
-                    )
-                    dpg.disable_item(dpg_node_tag + ":url")
-                    self.forms["url"][dpg_node_tag] = dpg.get_value(
-                        dpg_node_tag + ":url"
-                    )
-                    self.forms["connect"][dpg_node_tag] = self.configs[
-                        "label_connected"
-                    ]
-                else:
-                    dpg.set_item_label(
-                        dpg_node_tag + ":connect", self.configs["label_connect"]
-                    )
-                    self.forms["connect"][dpg_node_tag] = self.configs["label_connect"]
-                    dpg.show_item(dpg_node_tag + ":modal")
         elif self.forms["connect"][dpg_node_tag] == self.configs["label_connected"]:
             self.configs["instances"][dpg_node_tag].release()
             del self.configs["instances"][dpg_node_tag]

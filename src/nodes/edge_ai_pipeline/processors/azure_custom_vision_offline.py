@@ -309,43 +309,63 @@ class EdgeAINode(BaseNode):
     def get_export_params(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         params = {}
+        params["version"] = self.version
+        params["position"] = [0, 0]
+        params["model"] = self.forms["model"][dpg_node_tag]
+        params["model_filepath"] = ""
+        params["labels_filepath"] = ""
         if self.settings["gui"]:
-            params["version"] = self.version
             params["position"] = dpg.get_item_pos(dpg_node_tag)
-            params["model"] = self.forms["model"][dpg_node_tag]
-            params["model_filepath"] = ""
-            if dpg_node_tag in self.configs["model_filepaths"]:
-                params["model_filepath"] = self.configs["model_filepaths"][dpg_node_tag]
-            params["labels_filepath"] = ""
-            if dpg_node_tag in self.configs["labels_filepaths"]:
-                params["labels_filepath"] = self.configs["labels_filepaths"][
-                    dpg_node_tag
-                ]
+        if dpg_node_tag in self.configs["model_filepaths"]:
+            params["model_filepath"] = self.configs["model_filepaths"][dpg_node_tag]
+        if dpg_node_tag in self.configs["labels_filepaths"]:
+            params["labels_filepath"] = self.configs["labels_filepaths"][dpg_node_tag]
         return params
 
     def set_import_params(self, node_id, params):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
-        if "model" in params:
-            self.forms["model"][dpg_node_tag] = params["model"]
-            if self.settings["gui"]:
-                dpg.set_value(dpg_node_tag + ":model", params["model"])
+        self.forms["model"][dpg_node_tag] = params["model"]
         if self.settings["gui"]:
-            if "model_filepath" in params and os.path.exists(params["model_filepath"]):
-                self.configs["model_filepaths"][dpg_node_tag] = params["model_filepath"]
+            dpg.set_value(dpg_node_tag + ":model", params["model"])
+        if "model_filepath" in params and os.path.exists(params["model_filepath"]):
+            self.configs["model_filepaths"][dpg_node_tag] = params["model_filepath"]
+            if self.settings["gui"]:
                 dpg.set_value(
                     item=dpg_node_tag + ":modelfile:text",
                     value="Select ONNX Model : selected",
                 )
-            if "labels_filepath" in params and os.path.exists(
-                params["labels_filepath"]
-            ):
-                self.configs["labels_filepaths"][dpg_node_tag] = params[
-                    "labels_filepath"
-                ]
+        if "labels_filepath" in params and os.path.exists(params["labels_filepath"]):
+            self.configs["labels_filepaths"][dpg_node_tag] = params["labels_filepath"]
+            if self.settings["gui"]:
                 dpg.set_value(
                     item=dpg_node_tag + ":labelsfile:text",
                     value="Select Model Labels : selected",
                 )
+        if (
+            dpg_node_tag in self.configs["model_filepaths"]
+            and dpg_node_tag in self.configs["labels_filepaths"]
+        ):
+            link_class = self.configs["models"][self.forms["model"][dpg_node_tag]]
+            if self.settings["gui"]:
+                dpg.set_item_label(dpg_node_tag + ":connect", "...")
+            self.configs["instances"][dpg_node_tag] = link_class()
+            self.configs["instances"][dpg_node_tag].connect(
+                model_filepath=self.configs["model_filepaths"][dpg_node_tag],
+                labels_filepath=self.configs["labels_filepaths"][dpg_node_tag],
+            )
+            if self.configs["instances"][dpg_node_tag].is_active:
+                self.configs["status"][dpg_node_tag] = "active"
+                if self.settings["gui"]:
+                    dpg.set_item_label(
+                        dpg_node_tag + ":connect", self.configs["label_connected"]
+                    )
+                    dpg.disable_item(dpg_node_tag + ":model")
+                    dpg.disable_item(dpg_node_tag + ":modelfile")
+                    dpg.disable_item(dpg_node_tag + ":labelsfile")
+                    dpg.show_item(dpg_node_tag + ":modelfileNetron")
+            else:
+                if self.settings["gui"]:
+                    dpg.set_item_label(dpg_node_tag + ":connect", self.configs["label_connect"])
 
     def callback_button_connect(self, sender, data, user_data):
         dpg_node_tag = user_data
@@ -419,4 +439,6 @@ class EdgeAINode(BaseNode):
     def callback_change_netron(self, sender, data, user_data):
         dpg_node_tag = user_data
         self.settings["netron"].reload(self.configs["model_filepaths"][dpg_node_tag])
-        webbrowser.open("http://localhost:" + str(self.settings["webapi_port"]) + "/netron")
+        webbrowser.open(
+            "http://localhost:" + str(self.settings["webapi_port"]) + "/netron"
+        )

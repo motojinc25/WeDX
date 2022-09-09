@@ -198,10 +198,11 @@ class EdgeAINode(BaseNode):
     def get_export_params(self, node_id):
         dpg_node_tag = str(node_id) + ":" + self.name.lower().replace(" ", "_")
         params = {}
+        params["version"] = self.version
+        params["position"] = [0, 0]
+        params["model"] = self.forms["model"][dpg_node_tag]
         if self.settings["gui"]:
-            params["version"] = self.version
             params["position"] = dpg.get_item_pos(dpg_node_tag)
-            params["model"] = self.forms["model"][dpg_node_tag]
         return params
 
     def set_import_params(self, node_id, params):
