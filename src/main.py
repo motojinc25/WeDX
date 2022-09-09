@@ -85,6 +85,7 @@ async def main():
     settings["netron"] = None
     settings["webapp"] = True
     settings["iotedge"] = False
+    settings["init"] = True
     if args.no_gui:
         settings["gui"] = False
     if args.no_webapi:
@@ -96,9 +97,14 @@ async def main():
     shm_shape = np.zeros(
         (settings["video_streaming_height"], settings["video_streaming_width"], 3)
     ).astype(np.uint8)
-    created_shm = shared_memory.SharedMemory(
-        create=True, size=shm_shape.nbytes, name="wedx_shm"
-    )
+    try:
+        created_shm = shared_memory.SharedMemory(
+            name="wedx_shm", create=True, size=shm_shape.nbytes
+        )
+    except FileExistsError:
+        created_shm = shared_memory.SharedMemory(
+            name="wedx_shm", create=False, size=shm_shape.nbytes
+        )
     settings["shm"] = np.ndarray(
         shm_shape.shape, dtype=np.uint8, buffer=created_shm.buf
     )
@@ -182,6 +188,12 @@ async def main():
     new_frame_time = 0
     while wedx.is_dearpygui_running():
         await asyncio.sleep(0)
+        if settings["init"]:
+            node_frames = {}
+            node_messages = {}
+            prev_frame_time = 0
+            new_frame_time = 0
+            settings["init"] = False
         new_frame_time = time.time()
         time_elapsed = new_frame_time - prev_frame_time
         if time_elapsed > 1.0 / settings["fps"]:
