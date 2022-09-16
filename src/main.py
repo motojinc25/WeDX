@@ -256,4 +256,6 @@ if __name__ == "__main__":
         raise Exception(
             "WeDX requires python 3.9+. Current version of Python: %s" % sys.version
         )
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     sys.exit(asyncio.run(main()))
