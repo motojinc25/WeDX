@@ -11,5 +11,5 @@ paho-mqtt==1.6.1
 onnxruntime==1.12.1
 Flask[async]==2.2.2
 pyzmq==23.2.0
-streamlit==1.11.1
+streamlit==1.12.2
 netron==6.0.0
