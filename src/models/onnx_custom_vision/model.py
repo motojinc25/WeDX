@@ -83,13 +83,13 @@ class CustomVisionObjectDetection:
         model_filepath=os.path.abspath(
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "object_detection_model.onnx",
+                "sample_object_detection_model.onnx",
             )
         ),
         labels_filepath=os.path.abspath(
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "object_detection_labels.txt",
+                "sample_object_detection_labels.txt",
             )
         ),
         threshold=0.55,
@@ -239,13 +239,13 @@ class CustomVisionClassification:
         model_filepath=os.path.abspath(
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "classification_model.onnx",
+                "sample_classification_model.onnx",
             )
         ),
         labels_filepath=os.path.abspath(
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "classification_labels.txt",
+                "sample_classification_labels.txt",
             )
         ),
         device="CUDA",
@@ -385,9 +385,10 @@ if __name__ == "__main__":
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, args.height)
 
     # Model
-    model = CustomVisionClassification(device=args.device)
+    model = CustomVisionClassification()
     if args.use_object_detection:
-        model = CustomVisionObjectDetection(device=args.device)
+        model = CustomVisionObjectDetection()
+    model.connect(device=args.device)
 
     # Inference frame
     while cap.isOpened():
