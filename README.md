@@ -4,7 +4,7 @@
 
 Pipeline handling can be operated by integrating with [Azure IoT](https://azure.microsoft.com/en-us/solutions/iot/) (Azure IoT Hub, Azure IoT Hub DPS, Azure IoT Central, Azure IoT Edge, Azure Percept) other than locally, so it can be used as a [PoC](https://en.wikipedia.org/wiki/Proof_of_concept) for business scenarios. Recently, we have also integrated [Flask](https://flask.palletsprojects.com/) and [Streamlit](https://streamlit.io/) to work with web apps.
 
-It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without GUI.
+It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without GUI. If you want to run WeDX without GUI on Azure IoT Edge, you can deploy it in [Azure Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/1604376875527.wedx-aziotedge) with just a few clicks.
 
 [WeDX](https://github.com/motojinc25/WeDX/) was featured on [Dear PyGui's Showcase](https://github.com/hoffstadt/DearPyGui/wiki/Dear-PyGui-Showcase#wedx) page.
 
@@ -139,11 +139,25 @@ python3 src/main.py [Arguments]
 ```
 
 
-## Azure Bicep Templates
+## 📌 Azure Bicep Templates
 
 [Azure Bicep](https://docs.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview) under "[infra/azure/*.bicep](./infra/azure/README.md)" can quickly deploy Azure cloud resources supported by the latest version of WeDX.
 
 ![image](./docs/assets/images/azure_0.13.0.png)
+
+
+## 📌 Azure IoT Edge
+
+If you want to run WeDX without GUI on Azure IoT Edge, you can deploy it in [Azure Marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/1604376875527.wedx-aziotedge) with just a few clicks.
+
+[![Azure_Marketplace](./docs/assets/images/azure_marketplace.png)](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/1604376875527.wedx-aziotedge)
+
+
+## 📌 Sponsors
+
+This project is sponsored by [motojin.com, Inc.](https://motojin.com), building Edge AI Pipelines with No-Code.
+
+[![motojin.com, Inc.](./docs/assets/images/motojin_company.png)](https://motojin.com)
 
 
 ## 📌 Special thanks
