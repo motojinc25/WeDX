@@ -4,7 +4,7 @@
   "image": {
     "repository": "${CONTAINER_REGISTRY_ADDRESS}/wedx-cpu",
     "tag": {
-      "version": "0.14.0",
+      "version": "0.15.0",
       "platforms": {
         "amd64": "./Dockerfile.amd64",
         "arm64v8": "./Dockerfile.arm64v8"
