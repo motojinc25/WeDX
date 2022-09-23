@@ -244,6 +244,8 @@ class WeDXStudio:
             dpg.stop_dearpygui()
         else:
             self.is_running = False
+        if self.settings["webapp"]:
+            self.settings["webapp"] = False
 
     def callback_open_website(self, sender, app_data, user_data):
         webbrowser.open(user_data)
