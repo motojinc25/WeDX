@@ -1,0 +1,39 @@
+{
+  "doc_id": "a65503e5-d928-4ca2-a18d-264c5becba6d",
+  "doc_name": "Rock Scissor Paper",
+  "doc_version": "7aab6b46b9b46bf9c7d689191d4d29db",
+  "format": "onnx",
+  "version": 18,
+  "inputs": {
+    "Image": {
+      "dtype": "float32",
+      "shape": [
+        null,
+        224,
+        224,
+        3
+      ],
+      "name": "Image:0"
+    }
+  },
+  "outputs": {
+    "Confidences": {
+      "dtype": "float32",
+      "shape": [
+        null,
+        3
+      ],
+      "name": "sequential/dense_2/Softmax:0"
+    }
+  },
+  "tags": [],
+  "classes": {
+    "Label": [
+      "paper",
+      "rock",
+      "scissor"
+    ]
+  },
+  "filename": "model.onnx",
+  "export_model_version": 1
+}
