@@ -18,7 +18,7 @@ It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without
 
 ----
 
-[![WeDX](https://img.shields.io/badge/WeDX-0.15.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.15.0)
+[![WeDX](https://img.shields.io/badge/WeDX-0.16.0-brightgreen)](https://github.com/motojinc25/WeDX/releases/tag/wedx-0.16.0)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 
@@ -41,7 +41,7 @@ It supports x64 Windows, macOS, Linux, and ARM (arm64v8) Linux container without
   - stopPipeline
   - importPipeline
   - exportPipeline
-- Controllable by Web API using [Flask](https://flask.palletsprojects.com/). (http://localhost:1211)
+- Controllable by Web API using [Flask](https://flask.palletsprojects.com/) and [Swagger UI](https://swagger.io/tools/swagger-ui/). (http://localhost:1211)
   - startpipeline[POST]
   - stoppipeline[POST]
   - importpipeline[POST]

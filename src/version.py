@@ -1,4 +1,4 @@
 from typing import Tuple
 
-__version_info__: Tuple[int, int, int] = (0, 15, 0)
+__version_info__: Tuple[int, int, int] = (0, 16, 0)
 __version__: str = ".".join(map(str, __version_info__))
