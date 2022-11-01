@@ -3,6 +3,8 @@ import os
 import signal
 import webbrowser
 
+import requests
+
 from gui.constants import tag
 from version import __version__
 
@@ -21,6 +23,7 @@ class WeDXStudio:
     def __init__(self, settings, logger=logging.getLogger(__name__)):
         self.settings = settings
         self.logger = logger
+        self.latestVersion = ""
 
         # Set termination handler
         signal.signal(signal.SIGINT, self.termination_handler)
@@ -132,6 +135,42 @@ class WeDXStudio:
                     callback=lambda: dpg.hide_item(tag["window"]["about_wedx"]),
                 )
 
+            # get latest version
+            self.getLatestVersion()
+
+            # Check Updates windows
+            with dpg.window(
+                tag=tag["window"]["check_for_updates"],
+                label="Check for updates",
+                min_size=(300, 100),
+                show=False,
+                pos=(100, 100),
+            ):
+                if self.latestVersion is None:
+                    dpg.add_text("Cannot get the latest version.")
+                elif self.latestVersion == __version__:
+                    dpg.add_text(
+                        f"Current version ( {__version__} ) is the latest version."
+                    )
+                else:
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("Get the latest version here:")
+                        dpg.add_button(
+                            label="WeDX Repository",
+                            callback=lambda: webbrowser.open(
+                                "https://github.com/motojinc25/WeDX"
+                            ),
+                        )
+                    dpg.add_text(f"Cureent Version: {__version__}")
+                    dpg.add_text(f"Latest Version: {self.latestVersion}")
+                dpg.add_spacer()
+                dpg.add_separator()
+                dpg.add_spacer()
+                dpg.add_button(
+                    label="Close",
+                    callback=lambda: dpg.hide_item(tag["window"]["check_for_updates"]),
+                )
+
     def viewport_menu_bar(self):
         if self.settings["gui"]:
             with dpg.viewport_menu_bar(label="Primary Menu Bar", tag="viewport-bar"):
@@ -164,6 +203,12 @@ class WeDXStudio:
                         label="View License",
                         callback=self.callback_open_website,
                         user_data="https://github.com/motojinc25/WeDX/blob/main/LICENSE",
+                    )
+                    dpg.add_menu_item(
+                        label="Check for updates",
+                        callback=lambda: dpg.show_item(
+                            tag["window"]["check_for_updates"]
+                        ),
                     )
                     dpg.add_spacer()
                     dpg.add_separator()
@@ -249,3 +294,18 @@ class WeDXStudio:
 
     def callback_open_website(self, sender, app_data, user_data):
         webbrowser.open(user_data)
+
+    def getLatestVersion(self):
+        headers = {
+            "Accept": "application/json",
+        }
+        try:
+            response = requests.get(
+                "https://api.github.com/repos/motojinc25/WeDX/releases/latest",
+                headers=headers,
+            )
+            if response.status_code == 200:
+                data = response.json()
+                self.latestVersion = data["name"].replace("WeDX", "").strip()
+        except:
+            self.latestVersion = None

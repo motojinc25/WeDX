@@ -10,6 +10,7 @@ tag = {
         "about_wedx": "about_wedx_window",
         "iot_device_setting": "iot_device_setting_window",
         "logging_level_setting": "logging_level_setting_window",
+        "check_for_updates":"check_for_updates_window"
     },
     "tab_bar": {
         "primary": "primary_tab_bar",
